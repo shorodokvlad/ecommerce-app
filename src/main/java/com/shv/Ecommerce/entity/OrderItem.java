@@ -1,5 +1,6 @@
 package com.shv.Ecommerce.entity;
 
+import com.shv.Ecommerce.dto.ProductDto;
 import com.shv.Ecommerce.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.Data;
