@@ -11,9 +11,4 @@ public interface IUserService {
     Response getAllUsers();
     User getLoginUser();
     Response getUserInfoAndOrderHistory();
-
-
-
-
-
 }
