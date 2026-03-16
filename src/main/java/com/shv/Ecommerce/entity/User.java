@@ -22,18 +22,20 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Name is required")
     private String name;
 
     @Column(unique = true)
-    private String email;
     @NotBlank(message = "Email number is required")
+    private String email;
 
-    private String password;
     @NotBlank(message = "Password number is required")
+    private String password;
 
     @Column(name = "phone_number")
     @NotBlank(message = "Phone number is required")
     private String phoneNumber;
+
     private UserRole role;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

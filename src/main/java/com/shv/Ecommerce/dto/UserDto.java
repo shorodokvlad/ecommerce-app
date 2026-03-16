@@ -1,7 +1,6 @@
 package com.shv.Ecommerce.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.shv.Ecommerce.entity.Address;
 import com.shv.Ecommerce.enums.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +20,5 @@ public class UserDto {
     private String phoneNumber;
     private UserRole role;
     private List<OrderItemDto> orderItemList;
-    private Address address;
-
+    private AddressDto address;
 }

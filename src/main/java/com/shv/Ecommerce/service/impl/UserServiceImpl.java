@@ -20,7 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -34,14 +33,19 @@ public class UserServiceImpl implements IUserService {
     public Response registerUser(UserDto registrationRequest) {
         UserRole role = UserRole.USER;
 
-        if (registrationRequest.getRole() != null && registrationRequest.getRole().equals("admin")) {
+        /*
+        if (registrationRequest.getRole() != null && registrationRequest.getRole().equals("ADMIN")) {
+            role = UserRole.ADMIN;
+        }
+         */
+        if (registrationRequest.getRole() != null && registrationRequest.getRole() == UserRole.ADMIN) {
             role = UserRole.ADMIN;
         }
         User user = User.builder()
                 .name(registrationRequest.getName())
                 .email(registrationRequest.getEmail())
                 .password(passwordEncoder.encode(registrationRequest.getPassword()))
-                .password(registrationRequest.getPassword())
+                .phoneNumber(registrationRequest.getPhoneNumber())
                 .role(role)
                 .build();
 

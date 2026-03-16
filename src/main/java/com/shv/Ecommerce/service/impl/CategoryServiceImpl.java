@@ -36,6 +36,7 @@ public class CategoryServiceImpl implements ICategoryService {
     @Override
     public Response updateCategory(Long categoryId, CategoryDto categoryRequest) {
         Category category = categoryRepo.findById(categoryId).orElseThrow(()->new NotFoundException("Category not found"));
+        category.setName(categoryRequest.getName());
         categoryRepo.save(category);
 
         return Response.builder()

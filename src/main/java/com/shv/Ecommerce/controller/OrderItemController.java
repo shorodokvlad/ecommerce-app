@@ -1,6 +1,5 @@
 package com.shv.Ecommerce.controller;
 
-import com.shv.Ecommerce.dto.CategoryDto;
 import com.shv.Ecommerce.dto.OrderRequest;
 import com.shv.Ecommerce.dto.Response;
 import com.shv.Ecommerce.enums.OrderStatus;
@@ -22,20 +21,22 @@ import java.time.LocalDateTime;
 public class OrderItemController {
     private final IOrderItemService orderItemService;
 
-    @PostMapping("/category")
+    @PostMapping("/create")
     public ResponseEntity<Response> placeOrder(@RequestBody OrderRequest orderRequest) {
         return ResponseEntity.ok(orderItemService.placeOrder(orderRequest));
     }
 
-    @PostMapping("/update-item-status/{orderItemId}")
+    @PutMapping("/update-item-status/{orderItemId}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Response> updateOrderItemStatus(@RequestBody Long orderItemId, @RequestParam String status) {
+    public ResponseEntity<Response> updateOrderItemStatus(@PathVariable Long orderItemId, @RequestParam String status) {
         return ResponseEntity.ok(orderItemService.updateOrderItemStatus(orderItemId, status));
     }
 
+    @GetMapping("/filter")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Response> filterOrderItems(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE.DATE_TIME)LocalDateTime startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE.DATE_TIME)LocalDateTime endDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime endDate,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long itemId,
             @RequestParam(defaultValue = "0") int page,

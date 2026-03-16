@@ -8,19 +8,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+
 @RestController
 @RequestMapping("/category")
 @RequiredArgsConstructor
 public class CategoryController {
     public final ICategoryService categoryService;
 
-    @PostMapping("/category")
+    @PostMapping("/create")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Response> createCategory(@RequestBody CategoryDto categoryDto) {
         return ResponseEntity.ok(categoryService.createCategory(categoryDto));
     }
 
-    @PostMapping("/get-all")
+    @GetMapping("/get-all")
     public ResponseEntity<Response> getAllCategories() {
         return ResponseEntity.ok(categoryService.getAllCategories());
     }
@@ -31,13 +34,13 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.updateCategory(categoryId, categoryDto));
     }
 
-    @PutMapping("/delete/{categoryId}")
+    @DeleteMapping("/delete/{categoryId}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Response> deleteCategory(@PathVariable Long categoryId) {
         return ResponseEntity.ok(categoryService.deleteCategory(categoryId));
     }
 
-    @PostMapping("/get-category-by-id/{categoryId}")
+    @GetMapping("/get-category-by-id/{categoryId}")
     public ResponseEntity<Response> getCategoryById(@PathVariable Long categoryId) {
         return ResponseEntity.ok(categoryService.getCategoryById(categoryId));
     }

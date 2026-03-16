@@ -27,13 +27,13 @@ public class ProductController {
             @RequestParam BigDecimal price
     ) {
         if (categoryId == null || image.isEmpty() || name.isEmpty() || description.isEmpty() || price == null) {
-            throw new InvalidCredentialsException("All fiels are required");
+            throw new InvalidCredentialsException("All fields are required");
         }
 
         return ResponseEntity.ok(productService.createProduct(categoryId, image, name, description, price));
     }
 
-    @PostMapping("/update/{productId}")
+    @PutMapping("/update")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Response> updateProduct(
             @RequestParam Long productId,
@@ -52,7 +52,7 @@ public class ProductController {
         return ResponseEntity.ok(productService.deleteProduct(productId));
     }
 
-    @GetMapping("/get-all-product-id/{productId}")
+    @GetMapping("/get-by-product-id/{productId}")
     public ResponseEntity<Response> getProductById(@PathVariable Long productId) {
         return ResponseEntity.ok(productService.getProductById(productId));
     }
@@ -68,7 +68,7 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Response> searchForProduct(@PathVariable String searchValue) {
+    public ResponseEntity<Response> searchForProduct(@RequestParam String searchValue) {
         return ResponseEntity.ok(productService.searchProduct(searchValue));
     }
 }
