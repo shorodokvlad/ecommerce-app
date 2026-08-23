@@ -3,7 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import ApiService from "../../service/ApiService";
 import '../../style/profile.css';
 import Pagination from "../common/Pagination";
-import { ShoppingBag, MapPin, HelpCircle, LogOut, ChevronRight, PackageCheck, AlertCircle } from "lucide-react";
+import { ShoppingBag, MapPin, LogOut, ChevronRight, PackageCheck, AlertCircle } from "lucide-react";
+import ProfileSkeleton from "../common/ProfileSkeleton";
 
 const CACHE_KEY = 'profile_user_info_cache';
 const CACHE_TTL_MS = 60 * 1000;
@@ -101,12 +102,7 @@ const ProfilePage = () => {
     }
 
     if (!userInfo) {
-        return (
-            <div style={{ textAlign: "center", padding: "80px 0", color: "#64748b" }}>
-                <span className="button-spinner" style={{ width: "32px", height: "32px", borderColor: "#cbd5e1", borderTopColor: "#1F4E63" }} />
-                <p style={{ marginTop: "14px", fontSize: "0.95rem", fontWeight: 600 }}>Loading profile...</p>
-            </div>
-        );
+        return <ProfileSkeleton />;
     }
 
     const orderItemList = userInfo.orderItemList || [];
@@ -162,16 +158,6 @@ const ProfilePage = () => {
                             >
                                 <MapPin size={18} />
                                 <span>Delivery Addresses</span>
-                                <ChevronRight size={16} className="profile-nav-chevron" />
-                            </button>
-
-                            <button
-                                type="button"
-                                className="profile-nav-item"
-                                onClick={() => navigate("/store-features")}
-                            >
-                                <HelpCircle size={18} />
-                                <span>Support & Help</span>
                                 <ChevronRight size={16} className="profile-nav-chevron" />
                             </button>
 

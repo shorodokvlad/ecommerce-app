@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { AdminListSkeleton } from "./AdminSkeleton";
 import '../../style/adminProduct.css';
 import Pagination from "../common/Pagination";
 import ApiService from "../../service/ApiService";
@@ -91,10 +92,7 @@ const AdminProductPage = () => {
                     <button className="product-btn" onClick={() => { navigate('/admin/add-product'); }}>Add product</button>
 
                     {loading ? (
-                        <div style={{ textAlign: "center", padding: "48px 0", color: "var(--muted)" }}>
-                            <span className="button-spinner" style={{ width: "26px", height: "26px", borderColor: "var(--line)", borderTopColor: "var(--ink)" }} />
-                            <p style={{ marginTop: "12px", fontSize: "0.9rem" }}>Loading products...</p>
-                        </div>
+                        <AdminListSkeleton count={8} />
                     ) : (
                         <>
                             <ul>

@@ -117,7 +117,6 @@ public class EntityDtoMapper {
     }
 
     public UserDto mapUserToDtoPlusAddress(User user) {
-        System.out.println("mapUserToDtoPlusAddress is called");
         UserDto userDto = mapUserToDtoBasic(user);
 
         if (user.getAddress() != null) {

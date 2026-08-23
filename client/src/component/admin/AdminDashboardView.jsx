@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { AdminDashboardSkeleton } from "./AdminSkeleton";
 import ApiService from "../../service/ApiService";
 import "../../style/adminDashboard.css";
 import { 
@@ -27,6 +28,7 @@ const AdminDashboardView = () => {
         pendingDelivery: 0
     });
     const [timeframe, setTimeframe] = useState("Month"); // "Day" | "Week" | "Month" | "Year"
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -59,6 +61,8 @@ const AdminDashboardView = () => {
                 }
             } catch (err) {
                 console.error("Dashboard backend fetch error:", err);
+            } finally {
+                setLoading(false);
             }
         };
         fetchDashboardData();
@@ -158,6 +162,10 @@ const AdminDashboardView = () => {
         : "";
 
     const todayString = getTodayDateString();
+
+    if (loading) {
+        return <AdminDashboardSkeleton />;
+    }
 
     return (
         <div className="admin-dashboard-view">

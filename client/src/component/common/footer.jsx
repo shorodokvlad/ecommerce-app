@@ -60,11 +60,11 @@ const Footer = () => {
                     <div className="footer-column">
                         <h4 className="footer-heading">Quick Link</h4>
                         <ul className="footer-links-list">
-                            <li><NavLink to="/store-features">Privacy Policy</NavLink></li>
-                            <li><NavLink to="/store-features">Refund Policy</NavLink></li>
-                            <li><NavLink to="/store-features">Terms of Use</NavLink></li>
-                            <li><NavLink to="/store-features">FAQ's</NavLink></li>
-                            <li><NavLink to="/store-features">Contact</NavLink></li>
+                            <li><NavLink to="/categories">Privacy Policy</NavLink></li>
+                            <li><NavLink to="/categories">Refund Policy</NavLink></li>
+                            <li><NavLink to="/categories">Terms of Use</NavLink></li>
+                            <li><NavLink to="/categories">FAQ's</NavLink></li>
+                            <li><NavLink to="/categories">Contact</NavLink></li>
                         </ul>
                     </div>
                 </div>
