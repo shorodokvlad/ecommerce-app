@@ -52,4 +52,6 @@ public class Response {
     private List<LocalityDto> localityList;
     private WarehouseDto warehouse;
     private List<WarehouseDto> warehouseList;
+
+    private DashboardStatsDto dashboardStats;
 }

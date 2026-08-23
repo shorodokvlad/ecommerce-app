@@ -252,6 +252,14 @@ export default class ApiService {
         })
         return response.data;
     }
+/**DASHBOARD STATISTICS */
+    static async getDashboardStats(params) {
+        const response = await axios.get(`${this.BASE_URL}/dashboard/stats`, {
+            headers: this.getHeader(),
+            params
+        });
+        return response.data;
+    }
 
 
     /***ADDRESS */
