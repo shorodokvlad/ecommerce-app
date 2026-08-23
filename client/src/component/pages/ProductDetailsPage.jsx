@@ -6,6 +6,7 @@ import StockBadge from "../common/StockBadge";
 import SpecificationsTable from "../common/SpecificationsTable";
 import AddToCartModal from "../common/AddToCartModal";
 import AddReviewModal from "../common/AddReviewModal";
+import ProductDetailsSkeleton from "../common/ProductDetailsSkeleton";
 import StarRating from "../common/StarRating";
 import DeliveryEstimate from "../delivery/DeliveryEstimate";
 import ApiService from "../../service/ApiService";
@@ -279,12 +280,7 @@ const ProductDetailsPage = () => {
     };
 
     if (!product) {
-        return (
-            <div style={{ textAlign: "center", padding: "80px 0", color: "var(--muted)" }}>
-                <span className="button-spinner" style={{ width: "32px", height: "32px", borderColor: "var(--line)", borderTopColor: "var(--ink)" }} />
-                <p style={{ marginTop: "14px", fontSize: "0.95rem", fontWeight: 600 }}>Loading product details...</p>
-            </div>
-        );
+        return <ProductDetailsSkeleton />;
     }
 
     const currentImage = currentImages[activeImageIndex] || currentImages[0] || product.imageUrl;

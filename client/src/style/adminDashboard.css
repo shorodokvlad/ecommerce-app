@@ -204,6 +204,90 @@
     color: #334155;
     cursor: pointer;
 }
+/* CUSTOM DATE RANGE PICKER */
+.admin-date-picker-wrap {
+    position: relative;
+}
+
+.admin-date-picker-btn.has-range {
+    border-color: #0d9488;
+    background: #eef9f7;
+    color: #0d9488;
+}
+
+.admin-date-picker-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 30;
+    min-width: 300px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+}
+
+.date-picker-row {
+    display: flex;
+    gap: 10px;
+}
+
+.date-picker-field {
+    flex: 1;
+}
+
+.date-picker-field label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.date-picker-field input[type="date"] {
+    width: 100%;
+    padding: 8px 10px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #0f172a;
+    outline: none;
+}
+
+.date-picker-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.date-picker-reset {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.date-picker-apply {
+    background: #1F4E63;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.date-picker-apply:hover {
+    background: #17435A;
+}
 
 .admin-icon-circle-btn {
     width: 38px;
@@ -218,12 +302,12 @@
     cursor: pointer;
 }
 
-/* TIME FRAME PILL TABS MATCHING SCREENSHOT */
+/* TIME FRAME PILL TABS (site teal/ink theme) */
 .analytics-time-pills {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: #fff0f3;
+    background: #eef4f6;
     padding: 4px;
     border-radius: 999px;
 }
@@ -235,19 +319,19 @@
     border-radius: 999px;
     font-size: 0.84rem;
     font-weight: 700;
-    color: #991b1b;
+    color: #4A7086;
     cursor: pointer;
     transition: all 0.15s ease;
 }
 
 .time-pill-btn:hover {
-    color: #e11d48;
+    color: #1F4E63;
 }
 
 .time-pill-btn.active {
-    background: #e11d48;
+    background: #1F4E63;
     color: #ffffff;
-    box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
+    box-shadow: 0 2px 8px rgba(31, 78, 99, 0.25);
 }
 
 /* STAT CARDS ROW (4 CARDS) */
@@ -394,8 +478,28 @@
 
 /* SVG Line Chart */
 .svg-chart-container {
+    position: relative;
     width: 100%;
     height: 180px;
+}
+
+/* LEGEND LABELS under each chart dot */
+.chart-legend {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -6px;
+    height: 24px;
+}
+
+.chart-legend-label {
+    position: absolute;
+    transform: translateX(-50%);
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #4A7086;
+    white-space: nowrap;
+    text-align: center;
 }
 
 /* DONUT TARGET STYLING */
@@ -657,6 +761,29 @@
     font-size: 0.76rem;
     color: #64748b;
     font-weight: 600;
+}
+
+.stat-card-skeleton {
+    height: 130px;
+    border-radius: 16px;
+    background: #f1f5f9;
+    background-image: linear-gradient(
+        90deg,
+        #f1f5f9 0%,
+        #e2e8f0 20%,
+        #f1f5f9 40%,
+        #f1f5f9 100%
+    );
+    background-repeat: no-repeat;
+    background-size: 800px 100%;
+    animation: shimmer 1.4s infinite linear;
+}
+
+.chart-loading-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding: 24px 20px;
 }
 
 @media (max-width: 1200px) {

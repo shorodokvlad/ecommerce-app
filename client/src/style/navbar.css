@@ -273,12 +273,12 @@
     position: absolute;
     top: 100%;
     left: 0;
-    width: 320px;
+    width: 240px;
     background: #ffffff;
     border: 1px solid #dce7ec;
     border-radius: 0 0 14px 14px;
     box-shadow: 0 14px 35px rgba(15, 23, 42, 0.15);
-    padding: 16px;
+    padding: 14px;
     z-index: 1200;
     animation: fadeInDown 0.18s ease-out forwards;
 }
@@ -298,21 +298,23 @@
 .hover-menu-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
+    justify-content: flex-start;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
     border-bottom: 1px solid #e2e8f0;
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #1F4E63;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
 }
 
 .hover-menu-header a {
-    color: #2563eb;
+    color: #1F4E63;
+    font-size: 0.84rem;
+    font-weight: 700;
     text-decoration: none;
-    text-transform: none;
+    transition: color 0.15s ease;
+}
+
+.hover-menu-header a:hover {
+    color: #17435A;
+    text-decoration: underline;
 }
 
 .hover-menu-grid {

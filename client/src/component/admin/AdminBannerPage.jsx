@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ApiService from "../../service/ApiService";
+import { AdminListSkeleton } from "./AdminSkeleton";
 import "../../style/adminBanner.css";
 
 const AdminBannerPage = () => {
@@ -214,10 +215,7 @@ const AdminBannerPage = () => {
             )}
 
             {loading ? (
-                <div style={{ textAlign: "center", padding: "48px 0", color: "var(--muted)" }}>
-                    <span className="button-spinner" style={{ width: "26px", height: "26px", borderColor: "var(--line)", borderTopColor: "var(--ink)" }} />
-                    <p style={{ marginTop: "12px", fontSize: "0.9rem" }}>Loading banners...</p>
-                </div>
+                <AdminListSkeleton count={4} />
             ) : (
                 <table className="banner-table">
                     <thead>

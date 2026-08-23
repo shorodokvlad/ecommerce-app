@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ApiService from "../../service/ApiService";
+import { CategoryListSkeleton } from "../common/CategorySkeleton";
 import '../../style/categoryListPage.css';
 
 const CACHE_KEY = "shv_categories_list";
@@ -69,10 +70,7 @@ const CategoryListPage = () => {
                     </header>
 
                     {loading && categories.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "64px 0", color: "var(--muted)" }}>
-                            <span className="button-spinner" style={{ width: "32px", height: "32px", borderColor: "var(--line)", borderTopColor: "var(--ink)" }} />
-                            <p style={{ marginTop: "14px", fontSize: "0.95rem", fontWeight: 600 }}>Loading categories...</p>
-                        </div>
+                        <CategoryListSkeleton />
                     ) : (
                         <div className="category-grid">
                             {categories.map((category) => {

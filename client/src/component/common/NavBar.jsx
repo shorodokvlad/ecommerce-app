@@ -163,8 +163,7 @@ const Navbar = () => {
                         {isCategoryHovered && (
                             <div className="emag-hover-category-menu">
                                 <div className="hover-menu-header">
-                                    <span>All Product Categories</span>
-                                    <NavLink to="/categories" onClick={() => setIsCategoryHovered(false)}>View All →</NavLink>
+                                    <NavLink to="/categories" onClick={() => setIsCategoryHovered(false)}>All categories</NavLink>
                                 </div>
                                 <div className="hover-menu-grid">
                                     {categories.map((cat) => (
@@ -199,9 +198,9 @@ const Navbar = () => {
 
                     {/* RIGHT LINK: HELP */}
                     <div className="sub-nav-right">
-                        <NavLink to="/store-features" className="sub-link-item help-right-link">
+                        <NavLink to="/categories" className="sub-link-item help-right-link">
                             <HelpCircle size={15} />
-                            <span>Help</span>
+                            <span>Categories</span>
                         </NavLink>
                     </div>
                 </div>

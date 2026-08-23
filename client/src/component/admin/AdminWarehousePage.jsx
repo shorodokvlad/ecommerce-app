@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ApiService from "../../service/ApiService";
 import { useNavigate } from "react-router-dom";
+import { AdminListSkeleton } from "./AdminSkeleton";
 import '../../style/adminWarehouse.css';
 
 const AdminWarehousePage = () => {
@@ -67,10 +68,7 @@ const AdminWarehousePage = () => {
                 <button onClick={() => navigate('/admin/add-warehouse')}>Add Warehouse</button>
 
                 {loading ? (
-                    <div style={{ textAlign: "center", padding: "48px 0", color: "var(--muted)" }}>
-                        <span className="button-spinner" style={{ width: "26px", height: "26px", borderColor: "var(--line)", borderTopColor: "var(--ink)" }} />
-                        <p style={{ marginTop: "12px", fontSize: "0.9rem" }}>Loading warehouses...</p>
-                    </div>
+                    <AdminListSkeleton count={4} />
                 ) : warehouses.length === 0 ? (
                     <p className="warehouse-empty-hint">
                         No warehouses yet. Add your first warehouse to start allocating product stock.

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ApiService from "../../service/ApiService";
 import { useNavigate } from "react-router-dom";
+import { AdminListSkeleton } from "./AdminSkeleton";
 import '../../style/adminCategory.css';
 
 const AdminCategoryPage = () => {
@@ -49,10 +50,7 @@ const AdminCategoryPage = () => {
                 <button onClick={() => navigate('/admin/add-category')}>Add Category</button>
 
                 {loading ? (
-                    <div style={{ textAlign: "center", padding: "48px 0", color: "var(--muted)" }}>
-                        <span className="button-spinner" style={{ width: "26px", height: "26px", borderColor: "var(--line)", borderTopColor: "var(--ink)" }} />
-                        <p style={{ marginTop: "12px", fontSize: "0.9rem" }}>Loading categories...</p>
-                    </div>
+                    <AdminListSkeleton count={5} />
                 ) : (
                     <ul>
                         {categories.map((category) => (
