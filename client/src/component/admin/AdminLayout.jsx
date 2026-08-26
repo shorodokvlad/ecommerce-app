@@ -17,6 +17,7 @@ const AdminLayout = ({ children }) => {
         { path: "/admin/orders", label: "Manage Orders", icon: ShoppingBag },
         { path: "/admin/banners", label: "Manage Banners", icon: Tag },
         { path: "/admin/warehouses", label: "Manage Warehouses", icon: Building2 },
+        { path: "/admin/employees", label: "Manage Employees", icon: Users },
     ];
 
     const toggleSidebar = () => {
@@ -66,17 +67,6 @@ const AdminLayout = ({ children }) => {
                                 </Link>
                             );
                         })}
-
-                        {/* MANAGE EMPLOYEES PLACEHOLDER ITEM (NO ACTION ON CLICK) */}
-                        <button
-                            type="button"
-                            className="admin-nav-link"
-                            onClick={(e) => e.preventDefault()}
-                            title="Manage Employees"
-                        >
-                            <Users size={18} className="admin-nav-icon" />
-                            {!collapsed && <span>Manage Employees</span>}
-                        </button>
                     </nav>
                 </div>
 

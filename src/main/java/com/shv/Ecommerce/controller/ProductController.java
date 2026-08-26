@@ -18,7 +18,7 @@ public class ProductController {
     private final IProductService productService;
 
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     public ResponseEntity<Response> createProduct(
             @RequestParam Long categoryId,
             @RequestParam(required = false) MultipartFile image,
@@ -39,7 +39,7 @@ public class ProductController {
     }
 
     @PutMapping("/update")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     public ResponseEntity<Response> updateProduct(
             @RequestParam Long productId,
             @RequestParam(required = false) Long categoryId,
@@ -74,7 +74,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/delete/{productId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     public ResponseEntity<Response> deleteProduct(@PathVariable Long productId) {
         return ResponseEntity.ok(productService.deleteProduct(productId));
     }

@@ -4,6 +4,7 @@ import ApiService from "../../service/ApiService";
 import BlueprintManagerModal, { getStoredBlueprints, saveStoredBlueprints } from "./BlueprintManagerModal";
 import SpecBuilder from "./SpecBuilder";
 import { parseSpecifications } from "../../utils/specParser";
+import { useDemoRestriction } from "./demoRestriction";
 import '../../style/addProduct.css';
 
 const BUILT_IN_BLUEPRINTS = [
@@ -52,6 +53,7 @@ const EditProductPage = () => {
     const [customBlueprints, setCustomBlueprints] = useState([]);
     const [isBlueprintModalOpen, setIsBlueprintModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { readOnly, permissionMessage, blockWrite } = useDemoRestriction();
 
     const navigate = useNavigate();
 
@@ -369,6 +371,11 @@ const EditProductPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (readOnly) {
+            blockWrite();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
         setIsSubmitting(true);
         try {
             const formData = new FormData();
@@ -464,6 +471,7 @@ const EditProductPage = () => {
                 </button>
             </div>
 
+            {permissionMessage && <p className="demo-permission-message">{permissionMessage}</p>}
             {message && <div className="message">{message}</div>}
 
             <div className="form-group">
@@ -800,10 +808,13 @@ const EditProductPage = () => {
                 </div>
             </div>
 
+            {permissionMessage && <p className="demo-permission-message">{permissionMessage}</p>}
             {message && <div className="message" style={{ marginTop: "12px" }}>{message}</div>}
             <button
                 type="submit"
                 disabled={isSubmitting}
+                className={readOnly ? "demo-no-permission" : ""}
+                aria-disabled={readOnly}
                 style={{ marginTop: "16px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
             >
                 {isSubmitting ? (

@@ -31,6 +31,7 @@ import AdminBannerPage from './component/admin/AdminBannerPage';
 import AdminWarehousePage from './component/admin/AdminWarehousePage';
 import AddWarehousePage from './component/admin/AddWarehousePage';
 import EditWarehousePage from './component/admin/EditWarehousePage';
+import AdminEmployeesPage from './component/admin/AdminEmployeesPage';
 import SessionExpiryHandler from './component/common/SessionExpiryHandler';
 
 const AppContent = () => {
@@ -72,6 +73,7 @@ const AppContent = () => {
           <Route path='/admin/warehouses' element={<AdminRoute element={<AdminWarehousePage />} />} />
           <Route path='/admin/add-warehouse' element={<AdminRoute element={<AddWarehousePage />} />} />
           <Route path='/admin/edit-warehouse/:warehouseId' element={<AdminRoute element={<EditWarehousePage />} />} />
+          <Route path='/admin/employees' element={<AdminRoute element={<AdminEmployeesPage />} />} />
         </Routes>
       </main>
       {!isAdminRoute && <Footer />}

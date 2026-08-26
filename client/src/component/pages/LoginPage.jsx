@@ -8,8 +8,8 @@ const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 const LoginPage = () => {
 
     const [formData, setFormData] = useState({
-        email: '',
-        password: ''
+        email: 'demo.admin@shvstore.com',
+        password: '123456'
     });
 
     const navigate = useNavigate();
@@ -21,7 +21,8 @@ const LoginPage = () => {
         localStorage.setItem('token', response.token);
         localStorage.setItem('role', response.role);
         const from = location.state?.from?.pathname;
-        const destination = from || (response.role === 'ADMIN' ? '/admin' : '/');
+        const adminRoles = ['ADMIN', 'MANAGER', 'ADMIN_RESTRICTED'];
+        const destination = from || (adminRoles.includes(response.role) ? '/admin' : '/');
         navigate(destination, { replace: true });
     }, [location.state, navigate]);
 

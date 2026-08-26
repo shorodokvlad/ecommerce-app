@@ -24,7 +24,7 @@ const ProductList = ({ products }) => {
 
     return (
         <div className="product-list emag-6-cols">
-            {products.map((product, idx) => {
+            {products.map((product) => {
                 const defaultVariant = product.variants?.[0] || null;
                 const configuredProduct = configureProduct(product, defaultVariant);
                 const outOfStock = configuredProduct.stockQuantity === 0;
@@ -65,15 +65,17 @@ const ProductList = ({ products }) => {
                             {/* PRODUCT TITLE */}
                             <h3 className="emag-product-name">{product.name}</h3>
 
-                            {/* RATING ROW */}
-                            <div className="emag-rating-row">
-                                <StarRating 
-                                    value={product.averageRating || 4.8} 
-                                    count={product.reviewCount || 120 + idx * 7} 
-                                    size={12} 
-                                    showValue 
-                                />
-                            </div>
+                            {/* RATING ROW - only for products that actually have reviews */}
+                            {product.reviewCount > 0 && (
+                                <div className="emag-rating-row">
+                                    <StarRating
+                                        value={product.averageRating || 0}
+                                        count={product.reviewCount}
+                                        size={12}
+                                        showValue
+                                    />
+                                </div>
+                            )}
 
                             {/* PRICE AND ADD TO CART ROW */}
                             <div className="emag-price-cart-row">

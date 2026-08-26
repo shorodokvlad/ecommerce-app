@@ -243,6 +243,35 @@ const ProductDetailsPage = () => {
     const displayRating = overallRating ?? (product?.reviewCount > 0 ? product.averageRating : null);
     const displayCount = reviews.length > 0 ? reviews.length : (product?.reviewCount || 0);
 
+    const ratingBreakdown = useMemo(() => {
+        if (!displayCount) return [];
+        const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+        if (reviews.length > 0) {
+            reviews.forEach((r) => {
+                const rRating = Math.min(5, Math.max(1, Math.round(r.rating || 5)));
+                counts[rRating] = (counts[rRating] || 0) + 1;
+            });
+        } else if (product?.reviewCount > 0) {
+            const avg = product.averageRating || 5;
+            counts[5] = Math.round(product.reviewCount * (avg / 5));
+            counts[4] = product.reviewCount - counts[5];
+        }
+        return [5, 4, 3, 2, 1].map((star) => {
+            const cnt = counts[star] || 0;
+            const pct = displayCount > 0 ? Math.round((cnt / displayCount) * 100) : 0;
+            const color = star === 5 ? "#22c55e" : star === 4 ? "#84cc16" : star === 3 ? "#eab308" : star === 2 ? "#f97316" : "#ef4444";
+            return { label: `${star} star${star === 1 ? "" : "s"}`, count: cnt, pct, color };
+        });
+    }, [reviews, product, displayCount]);
+
+    const handleOpenReviewModal = () => {
+        if (isAuthenticated) {
+            setIsReviewModalOpen(true);
+        } else {
+            navigate("/login");
+        }
+    };
+
     const handleModalReviewSubmit = async ({ rating, content }) => {
         setReviewMessage(null);
         setReviewError(null);
@@ -518,7 +547,7 @@ const ProductDetailsPage = () => {
                 </div>
             )}
 
-            {/* eMAG Reviews Breakdown Section (Matching Screenshot 2) */}
+            {/* eMAG Reviews Breakdown Section */}
             <div className="emag-reviews-container" id="reviews">
                 <h2 className="emag-reviews-main-title">
                     Reviews <span className="emag-reviews-count-pill">({displayCount} reviews)</span>
@@ -527,108 +556,118 @@ const ProductDetailsPage = () => {
                 {reviewMessage && <p className="message">{reviewMessage}</p>}
                 {reviewError && <p className="error-message">{reviewError}</p>}
 
-                {/* 4-Column Breakdown Dashboard Card */}
-                <div className="emag-reviews-dashboard-card">
-                    {/* Col 1: Big Score */}
-                    <div className="emag-rev-col emag-rev-score-col">
-                        <div className="emag-big-score">{displayRating ? displayRating.toFixed(2) : "4.97"}</div>
-                        <div className="emag-score-stars">
-                            <StarRating value={displayRating || 4.97} size={18} />
+                {displayCount === 0 ? (
+                    /* Zero Reviews Banner Card (Matching Screenshot in English) */
+                    <div className="emag-zero-reviews-card">
+                        <div className="emag-zero-content">
+                            <h3 className="emag-zero-title">Be the first to write a review</h3>
+                            <p className="emag-zero-subtext">Share your opinion by rating the product</p>
                         </div>
-                        <div className="emag-score-subtext">{displayCount || 137} reviews</div>
-                    </div>
-
-                    {/* Col 2: Star Breakdown Progress Bars */}
-                    <div className="emag-rev-col emag-rev-bars-col">
-                        {[
-                            { label: "5 stars", count: displayCount > 0 ? Math.round(displayCount * 0.96) : 134, pct: 96, color: "#22c55e" },
-                            { label: "4 stars", count: displayCount > 0 ? Math.round(displayCount * 0.02) : 2, pct: 8, color: "#84cc16" },
-                            { label: "3 stars", count: displayCount > 0 ? Math.round(displayCount * 0.01) : 1, pct: 4, color: "#eab308" },
-                            { label: "2 stars", count: 0, pct: 0, color: "#f97316" },
-                            { label: "1 star",  count: 0, pct: 0, color: "#ef4444" }
-                        ].map((bar) => (
-                            <div className="emag-bar-row" key={bar.label}>
-                                <span className="emag-bar-label">{bar.label}</span>
-                                <div className="emag-bar-track">
-                                    <div className="emag-bar-fill" style={{ width: `${bar.pct}%`, backgroundColor: bar.color }} />
-                                </div>
-                                <span className="emag-bar-count">({bar.count})</span>
+                        <div className="emag-zero-action-group">
+                            <div 
+                                className="emag-action-star-row"
+                                onClick={handleOpenReviewModal}
+                                style={{ cursor: "pointer" }}
+                            >
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                    <Star key={s} size={22} color="#cbd5e1" strokeWidth={1.5} />
+                                ))}
+                                <span className="emag-rate-hint">Rate this product</span>
                             </div>
-                        ))}
-                    </div>
 
-                    {/* Col 3: Verified Buyer Badge */}
-                    <div className="emag-rev-col emag-rev-verified-col">
-                        <div className="emag-verified-badge-icon">
-                            <CheckCircle2 size={24} color="#22c55e" fill="#22c55e" />
+                            <button
+                                type="button"
+                                className="emag-zero-review-btn"
+                                onClick={handleOpenReviewModal}
+                            >
+                                Add a review
+                            </button>
                         </div>
-                        <div className="emag-verified-count">{displayCount || 135}</div>
-                        <div className="emag-verified-subtext">Verified Buyer Reviews</div>
                     </div>
-
-                    {/* Col 4: Action Box - Add a Review */}
-                    <div className="emag-rev-col emag-rev-action-col">
-                        <h4 className="emag-action-heading">Do you own or have you used this product?</h4>
-                        <p className="emag-action-subtext">Share your opinion by rating the product</p>
-                        
-                        <div 
-                            className="emag-action-star-row"
-                            onClick={() => {
-                                if (isAuthenticated) {
-                                    setIsReviewModalOpen(true);
-                                } else {
-                                    navigate("/login");
-                                }
-                            }}
-                        >
-                            {[1, 2, 3, 4, 5].map((s) => (
-                                <Star key={s} size={22} color="#cbd5e1" strokeWidth={1.5} />
-                            ))}
-                            <span className="emag-rate-hint">Rate this product</span>
-                        </div>
-
-                        <button
-                            type="button"
-                            className="emag-add-review-btn"
-                            onClick={() => {
-                                if (isAuthenticated) {
-                                    setIsReviewModalOpen(true);
-                                } else {
-                                    navigate("/login");
-                                }
-                            }}
-                        >
-                            Add a review
-                        </button>
-                    </div>
-                </div>
-
-                {/* Reviews List */}
-                <div className="reviews-list">
-                    {reviews.length === 0 ? (
-                        <p className="reviews-empty">No reviews yet — be the first to review this product.</p>
-                    ) : (
-                        reviews.map((review) => (
-                            <article className="review-card" key={review.id}>
-                                <div className="review-card-head">
-                                    <StarRating value={review.rating} size={13} />
-                                    <span className="review-author">{review.userName || 'Anonymous'}</span>
-                                    <span className="review-date">{formatReviewDate(review.createdAt)}</span>
-                                    {(isAdmin || currentUserId === review.userId) && (
-                                        <button
-                                            type="button"
-                                            className="review-delete-btn"
-                                            onClick={() => handleDeleteReview(review.id)}
-                                        >
-                                            Delete
-                                        </button>
-                                    )}
+                ) : (
+                    <>
+                        {/* 4-Column Breakdown Dashboard Card */}
+                        <div className="emag-reviews-dashboard-card">
+                            {/* Col 1: Big Score */}
+                            <div className="emag-rev-col emag-rev-score-col">
+                                <div className="emag-big-score">{displayRating ? displayRating.toFixed(2) : "0.00"}</div>
+                                <div className="emag-score-stars">
+                                    <StarRating value={displayRating || 0} size={18} />
                                 </div>
-                                {review.content && <p className="review-content">{review.content}</p>}
-                            </article>
-                        ))
-                    )}
-                </div>
+                                <div className="emag-score-subtext">{displayCount} review{displayCount === 1 ? '' : 's'}</div>
+                            </div>
+
+                            {/* Col 2: Star Breakdown Progress Bars */}
+                            <div className="emag-rev-col emag-rev-bars-col">
+                                {ratingBreakdown.map((bar) => (
+                                    <div className="emag-bar-row" key={bar.label}>
+                                        <span className="emag-bar-label">{bar.label}</span>
+                                        <div className="emag-bar-track">
+                                            <div className="emag-bar-fill" style={{ width: `${bar.pct}%`, backgroundColor: bar.color }} />
+                                        </div>
+                                        <span className="emag-bar-count">({bar.count})</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Col 3: Verified Buyer Badge */}
+                            <div className="emag-rev-col emag-rev-verified-col">
+                                <div className="emag-verified-badge-icon">
+                                    <CheckCircle2 size={24} color="#22c55e" fill="#22c55e" />
+                                </div>
+                                <div className="emag-verified-count">{displayCount}</div>
+                                <div className="emag-verified-subtext">Verified Buyer Reviews</div>
+                            </div>
+
+                            {/* Col 4: Action Box - Add a Review */}
+                            <div className="emag-rev-col emag-rev-action-col">
+                                <h4 className="emag-action-heading">Do you own or have you used this product?</h4>
+                                <p className="emag-action-subtext">Share your opinion by rating the product</p>
+                                
+                                <div 
+                                    className="emag-action-star-row"
+                                    onClick={handleOpenReviewModal}
+                                >
+                                    {[1, 2, 3, 4, 5].map((s) => (
+                                        <Star key={s} size={22} color="#cbd5e1" strokeWidth={1.5} />
+                                    ))}
+                                    <span className="emag-rate-hint">Rate this product</span>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="emag-add-review-btn"
+                                    onClick={handleOpenReviewModal}
+                                >
+                                    Add a review
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Reviews List */}
+                        <div className="reviews-list">
+                            {reviews.map((review) => (
+                                <article className="review-card" key={review.id}>
+                                    <div className="review-card-head">
+                                        <StarRating value={review.rating} size={13} />
+                                        <span className="review-author">{review.userName || 'Anonymous'}</span>
+                                        <span className="review-date">{formatReviewDate(review.createdAt)}</span>
+                                        {(isAdmin || currentUserId === review.userId) && (
+                                            <button
+                                                type="button"
+                                                className="review-delete-btn"
+                                                onClick={() => handleDeleteReview(review.id)}
+                                            >
+                                                Delete
+                                            </button>
+                                        )}
+                                    </div>
+                                    {review.content && <p className="review-content">{review.content}</p>}
+                                </article>
+                            ))}
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Added to Cart Popup Modal */}

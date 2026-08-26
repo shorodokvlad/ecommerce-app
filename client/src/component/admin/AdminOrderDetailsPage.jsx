@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { useDemoRestriction } from "./demoRestriction";
 import '../../style/adminOrderDetails.css'
 import ApiService from "../../service/ApiService";
 
@@ -11,6 +12,7 @@ const AdminOrderDetailsPage = () => {
     const [orderItems, setOrderItems] = useState([]);
     const [message, setMessage] = useState('');
     const [selectedStatus, setSelectedStatus] = useState({});
+    const { readOnly, permissionMessage, blockWrite } = useDemoRestriction();
 
 
     useEffect(() => {
@@ -31,6 +33,10 @@ const AdminOrderDetailsPage = () => {
     }
 
     const handleSubmitStatusChange = async (orderItemId) => {
+        if (readOnly) {
+            blockWrite();
+            return;
+        }
         try {
             await ApiService.updateOrderitemStatus(orderItemId, selectedStatus[orderItemId]);
             setMessage('order item status was successfully updated')
@@ -45,6 +51,7 @@ const AdminOrderDetailsPage = () => {
 
     return (
         <div className="order-details-page">
+            {permissionMessage && <p className="demo-permission-message">{permissionMessage}</p>}
             {message && <div className="message">{message}</div>}
             <h2>Order Details</h2>
             {orderItems.length ? (
@@ -85,7 +92,6 @@ const AdminOrderDetailsPage = () => {
                             {orderItem.variantAttributes && Object.entries(orderItem.variantAttributes).map(([key, value]) => (
                                 <p key={key}><strong>{key}:</strong>{value}</p>
                             ))}
-                            <p><strong>Description:</strong>{product.description}</p>
                             <p><strong>Price:</strong>{product.price}</p>
                         </div>
                         <div className="status-change">
@@ -99,7 +105,13 @@ const AdminOrderDetailsPage = () => {
                                     <option key={status} value={status}>{status}</option>
                                 ))}
                             </select>
-                            <button className="update-status-button" onClick={() => handleSubmitStatusChange(orderItem.id)}>Update Status</button>
+                            <button
+                                className={`update-status-button${readOnly ? " demo-no-permission" : ""}`}
+                                aria-disabled={readOnly}
+                                onClick={() => handleSubmitStatusChange(orderItem.id)}
+                            >
+                                Update Status
+                            </button>
                         </div>
                     </div>
 

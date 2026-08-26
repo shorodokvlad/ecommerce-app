@@ -23,6 +23,29 @@ const getCachedLocation = () => {
     return null;
 };
 
+const formatEtaDate = (iso) => {
+    return new Intl.DateTimeFormat("en-GB", {
+        weekday: "long",
+        day: "numeric",
+        month: "short"
+    }).format(new Date(`${iso}T00:00:00`));
+};
+
+const formatEtaShort = (iso) => {
+    return new Intl.DateTimeFormat("en-GB", {
+        day: "numeric",
+        month: "short"
+    }).format(new Date(`${iso}T00:00:00`));
+};
+
+const formatEtaRange = (from, to) => {
+    if (!from && !to) return "";
+    if (from && to && from !== to) {
+        return `${formatEtaShort(from)} - ${formatEtaDate(to)}`;
+    }
+    return formatEtaDate(from || to);
+};
+
 const DeliveryEstimate = ({ defaultSubtotal = 0 }) => {
     const { cart } = useCart();
 
@@ -42,7 +65,6 @@ const DeliveryEstimate = ({ defaultSubtotal = 0 }) => {
     const [selectedCounty, setSelectedCounty] = useState("");
     const [selectedLocality, setSelectedLocality] = useState("");
     const [estimate, setEstimate] = useState(null);
-    const [isExpanded, setIsExpanded] = useState(true);
 
     const loadEstimate = useCallback(
         async (params) => {
@@ -168,6 +190,9 @@ const DeliveryEstimate = ({ defaultSubtotal = 0 }) => {
         return null;
     };
 
+    // Only the standard courier option is displayed
+    const courierOptions = (estimate?.options || []).filter((o) => o.service === "standard");
+
     return (
         <div className="emag-delivery-estimate-card">
             {/* Header: Estimated delivery to */}
@@ -209,47 +234,40 @@ const DeliveryEstimate = ({ defaultSubtotal = 0 }) => {
                 </div>
             )}
 
-            {/* Courier Delivery Section */}
-            <div className="emag-courier-delivery-box">
-                <div className="emag-courier-row">
-                    {/* Blue circular truck badge icon */}
-                    <div className="emag-courier-badge">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="1" y="3" width="15" height="13" rx="2" />
-                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
-                            <circle cx="5.5" cy="18.5" r="2.5" />
-                            <circle cx="18.5" cy="18.5" r="2.5" />
-                        </svg>
-                    </div>
+            {/* Courier Delivery Section - shown only once a location (county + locality) is known */}
+            {estimate && courierOptions.length > 0 && (
+                <div className="emag-courier-delivery-box">
+                    <div className="emag-courier-row">
+                        {/* Truck badge icon */}
+                        <div className="emag-courier-badge">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="1" y="3" width="15" height="13" rx="2" />
+                                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                                <circle cx="5.5" cy="18.5" r="2.5" />
+                                <circle cx="18.5" cy="18.5" r="2.5" />
+                            </svg>
+                        </div>
 
-                    <div className="emag-courier-info">
-                        <h4 className="emag-courier-title">Courier delivery:</h4>
+                        <div className="emag-courier-info">
+                            <h4 className="emag-courier-title">Courier delivery:</h4>
 
-                        {isExpanded && (
                             <div className="emag-courier-details">
-                                <div className="emag-sub-option-dot">
-                                    <span className="blue-dot"></span>
-                                    <div className="emag-sub-option-content">
-                                        <div className="emag-sub-title">Standard delivery</div>
-                                        <div className="emag-sub-date">Monday, 24 Aug.</div>
-                                        <div className="emag-sub-price">
-                                            {subtotal > 100 ? "Free" : "€3.99"}
+                                {courierOptions.map((option) => (
+                                    <div className="emag-sub-option-dot" key={option.service || option.label}>
+                                        <div className="emag-sub-option-content">
+                                            <div className="emag-sub-title">{option.label}</div>
+                                            <div className="emag-sub-date">{formatEtaRange(option.etaFrom, option.etaTo)}</div>
+                                            <div className="emag-sub-price">
+                                                {option.free ? "Free" : `€${Number(option.price || 0).toFixed(2)}`}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                ))}
                             </div>
-                        )}
-
-                        <button 
-                            type="button" 
-                            className="emag-toggle-link"
-                            onClick={() => setIsExpanded(!isExpanded)}
-                        >
-                            {isExpanded ? "▲ hide" : "▼ show details"}
-                        </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };

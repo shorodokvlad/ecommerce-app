@@ -34,7 +34,7 @@ const AdminDashboardView = () => {
         totalCustomers: 0,
         pendingDelivery: 0
     });
-    const [timeframe, setTimeframe] = useState("Month"); // "Day" | "Week" | "Month" | "Year"
+    const [timeframe, setTimeframe] = useState("Year"); // "Day" | "Week" | "Month" | "Year"
     const [graphBuckets, setGraphBuckets] = useState([]);
     const [dateRange, setDateRange] = useState({ start: "", end: "" });
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -42,6 +42,7 @@ const AdminDashboardView = () => {
     const [chartLoading, setChartLoading] = useState(false);
     const [statsLoading, setStatsLoading] = useState(false);
     const [draftRange, setDraftRange] = useState({ start: "", end: "" });
+    const [hoveredPoint, setHoveredPoint] = useState(null);
 
     useEffect(() => {
         // Sales Analytics chart — refreshed ONLY when the timeframe tab changes.
@@ -147,7 +148,7 @@ const AdminDashboardView = () => {
     if (loading) {
         return <AdminDashboardSkeleton />;
     }
-return (
+    return (
         <div className="admin-dashboard-view">
             {/* OVERVIEW TOP HEADER */}
             <div className="admin-header-row">
@@ -165,9 +166,9 @@ return (
                             type="button"
                             className={`admin-date-picker-btn ${hasRange ? "has-range" : ""}`}
                             onClick={() => {
-                            if (!showDatePicker) setDraftRange(dateRange);
-                            setShowDatePicker(prev => !prev);
-                        }}
+                                if (!showDatePicker) setDraftRange(dateRange);
+                                setShowDatePicker(prev => !prev);
+                            }}
                         >
                             <Calendar size={15} />
                             <span>{rangeLabel}</span>
@@ -210,7 +211,7 @@ return (
                     </button>
                 </div>
             </div>
-{/* 4 TOP STAT CARDS ROW (POWERED BY REAL BACKEND DATA) */}
+            {/* 4 TOP STAT CARDS ROW (POWERED BY REAL BACKEND DATA) */}
             {statsLoading ? (
                 <div className="admin-stats-grid">
                     <div className="stat-card-skeleton" />
@@ -219,69 +220,69 @@ return (
                     <div className="stat-card-skeleton" />
                 </div>
             ) : (
-            <div className="admin-stats-grid">
-                {/* 1. Total Revenue */}
-                <div className="admin-stat-card">
-                    <div className="stat-card-info">
-                        <h4 className="stat-card-title">Total Revenue</h4>
-                        <span className="stat-card-sub">Total sales to date</span>
-                        <div className="stat-card-value">€{formatPrice(stats.totalRevenue)}</div>
-                        <span className="stat-card-trend trend-up">
-                            <ArrowUpRight size={14} /> Total revenue
-                        </span>
+                <div className="admin-stats-grid">
+                    {/* 1. Total Revenue */}
+                    <div className="admin-stat-card">
+                        <div className="stat-card-info">
+                            <h4 className="stat-card-title">Total Revenue</h4>
+                            <span className="stat-card-sub">Total sales to date</span>
+                            <div className="stat-card-value">€{formatPrice(stats.totalRevenue)}</div>
+                            <span className="stat-card-trend trend-up">
+                                <ArrowUpRight size={14} /> Total revenue
+                            </span>
+                        </div>
+                        <div className="stat-icon-wrap">
+                            <DollarSign size={22} />
+                        </div>
                     </div>
-                    <div className="stat-icon-wrap">
-                        <DollarSign size={22} />
-                    </div>
-                </div>
 
-                {/* 2. Total Order */}
-                <div className="admin-stat-card">
-                    <div className="stat-card-info">
-                        <h4 className="stat-card-title">Total Order</h4>
-                        <span className="stat-card-sub">Orders placed</span>
-                        <div className="stat-card-value">{stats.totalOrders}</div>
-                        <span className="stat-card-trend trend-up">
-                            <ArrowUpRight size={14} /> Total orders
-                        </span>
+                    {/* 2. Total Order */}
+                    <div className="admin-stat-card">
+                        <div className="stat-card-info">
+                            <h4 className="stat-card-title">Total Order</h4>
+                            <span className="stat-card-sub">Orders placed</span>
+                            <div className="stat-card-value">{stats.totalOrders}</div>
+                            <span className="stat-card-trend trend-up">
+                                <ArrowUpRight size={14} /> Total orders
+                            </span>
+                        </div>
+                        <div className="stat-icon-wrap">
+                            <ShoppingCart size={22} />
+                        </div>
                     </div>
-                    <div className="stat-icon-wrap">
-                        <ShoppingCart size={22} />
-                    </div>
-                </div>
 
-                {/* 3. Total Customer */}
-                <div className="admin-stat-card">
-                    <div className="stat-card-info">
-                        <h4 className="stat-card-title">Total Customer</h4>
-                        <span className="stat-card-sub">Unique buyers</span>
-                        <div className="stat-card-value">{stats.totalCustomers}</div>
-                        <span className="stat-card-trend trend-up">
-                            <ArrowUpRight size={14} /> Registered buyers
-                        </span>
+                    {/* 3. Total Customer */}
+                    <div className="admin-stat-card">
+                        <div className="stat-card-info">
+                            <h4 className="stat-card-title">Total Customer</h4>
+                            <span className="stat-card-sub">Unique buyers</span>
+                            <div className="stat-card-value">{stats.totalCustomers}</div>
+                            <span className="stat-card-trend trend-up">
+                                <ArrowUpRight size={14} /> Registered buyers
+                            </span>
+                        </div>
+                        <div className="stat-icon-wrap">
+                            <Users size={22} />
+                        </div>
                     </div>
-                    <div className="stat-icon-wrap">
-                        <Users size={22} />
-                    </div>
-                </div>
 
-                {/* 4. Pending Delivery */}
-                <div className="admin-stat-card">
-                    <div className="stat-card-info">
-                        <h4 className="stat-card-title">Pending Delivery</h4>
-                        <span className="stat-card-sub">Active shipments</span>
-                        <div className="stat-card-value">{stats.pendingDelivery}</div>
-                        <span className="stat-card-trend trend-up">
-                            <ArrowUpRight size={14} /> Active orders
-                        </span>
+                    {/* 4. Pending Delivery */}
+                    <div className="admin-stat-card">
+                        <div className="stat-card-info">
+                            <h4 className="stat-card-title">Pending Delivery</h4>
+                            <span className="stat-card-sub">Active shipments</span>
+                            <div className="stat-card-value">{stats.pendingDelivery}</div>
+                            <span className="stat-card-trend trend-up">
+                                <ArrowUpRight size={14} /> Active orders
+                            </span>
+                        </div>
+                        <div className="stat-icon-wrap">
+                            <Truck size={22} />
+                        </div>
                     </div>
-                    <div className="stat-icon-wrap">
-                        <Truck size={22} />
-                    </div>
-                </div>
                 </div>
             )}
-{/* DASHBOARD SALES ANALYTIC WITH TIME TABS & REAL ORDER GRAPH */}
+            {/* DASHBOARD SALES ANALYTIC WITH TIME TABS & REAL ORDER GRAPH */}
             <div className="admin-chart-card full-width-chart">
                 <div className="chart-card-header">
                     <h3 className="chart-card-title">Sales Analytic</h3>
@@ -308,37 +309,70 @@ return (
                     </div>
                 ) : (
                     <>
-                <div className="chart-stats-summary">
-                    <div className="summary-metric-box">
-                        <span className="metric-label">Revenue ({timeframe})</span>
-                        <span className="metric-val">€{formatPrice(totalTimeframeRevenue)}</span>
-                    </div>
-                </div>
+                        <div className="chart-stats-summary">
+                            <div className="summary-metric-box">
+                                <span className="metric-label">Revenue ({timeframe})</span>
+                                <span className="metric-val">€{formatPrice(totalTimeframeRevenue)}</span>
+                            </div>
+                        </div>
 
-                {/* DYNAMIC REAL REVENUE LINE SVG CHART */}
-                <div className="svg-chart-container">
-                    <svg width="100%" height="100%" viewBox="0 0 500 150" preserveAspectRatio="none">
-                        <defs>
-                            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#6EC8C0" stopOpacity="0.4" />
-                                <stop offset="100%" stopColor="#6EC8C0" stopOpacity="0.0" />
-                            </linearGradient>
-                        </defs>
-                        {svgFillD && <path d={svgFillD} fill="url(#chartGradient)" />}
-                        {svgPathD && <path d={svgPathD} fill="none" stroke="#1F4E63" strokeWidth="1.8" strokeLinecap="round" />}
-                        {points.map((pt, i) => (
-                            <circle key={i} cx={pt.x} cy={pt.y} r="1.9" fill="#1F4E63" stroke="#ffffff" strokeWidth="0.9" />
-                        ))}
-                    </svg>
-                    {/* LEGEND LABELS horizontal underneath each dot */}
-                    <div className="chart-legend">
-                        {points.map((pt, i) => (
-                            <span key={i} className="chart-legend-label" style={{ left: `${(pt.x / chartWidth) * 100}%` }}>
-                                {pt.label}
-                            </span>
-                        ))}
-                    </div>
-                </div>
+                        {/* DYNAMIC REAL REVENUE LINE SVG CHART */}
+                        <div className="svg-chart-container">
+                            <svg width="100%" height="100%" viewBox="0 0 500 150" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#6EC8C0" stopOpacity="0.4" />
+                                        <stop offset="100%" stopColor="#6EC8C0" stopOpacity="0.0" />
+                                    </linearGradient>
+                                </defs>
+                                {svgFillD && <path d={svgFillD} fill="url(#chartGradient)" />}
+                                {svgPathD && <path d={svgPathD} fill="none" stroke="#1F4E63" strokeWidth="1.8" strokeLinecap="round" />}
+                                {points.map((pt, i) => (
+                                    <circle key={i} cx={pt.x} cy={pt.y} r="1.9" fill="#1F4E63" stroke="#ffffff" strokeWidth="0.9" />
+                                ))}
+                                {/* INVISIBLE LARGER HOVER TARGETS over each dot */}
+                                {points.map((pt, i) => (
+                                    <circle
+                                        key={`hit-${i}`}
+                                        cx={pt.x}
+                                        cy={pt.y}
+                                        r="8"
+                                        fill="transparent"
+                                        onMouseEnter={() => setHoveredPoint(i)}
+                                        onMouseLeave={() => setHoveredPoint(null)}
+                                    />
+                                ))}
+                            </svg>
+
+                            {/* HOVER TOOLTIP: money earned in the hovered bucket */}
+                            {hoveredPoint !== null && points[hoveredPoint] && (
+                                <div
+                                    className="chart-point-tooltip"
+                                    style={{
+                                        left: `${(points[hoveredPoint].x / chartWidth) * 100}%`,
+                                        top: `${(points[hoveredPoint].y / chartHeight) * 100}%`
+                                    }}
+                                >
+                                    <span className="tooltip-label">{points[hoveredPoint].label}</span>
+                                    <span className="tooltip-value">€{formatPrice(points[hoveredPoint].revenue)}</span>
+                                </div>
+                            )}
+
+                            {/* LEGEND LABELS horizontal underneath each dot */}
+                            <div className="chart-legend">
+                                {points.map((pt, i) => (
+                                    <span
+                                        key={i}
+                                        className="chart-legend-label"
+                                        style={{ left: `${(pt.x / chartWidth) * 100}%` }}
+                                        onMouseEnter={() => setHoveredPoint(i)}
+                                        onMouseLeave={() => setHoveredPoint(null)}
+                                    >
+                                        {pt.label}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
                     </>
                 )}
             </div>

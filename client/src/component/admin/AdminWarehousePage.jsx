@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import ApiService from "../../service/ApiService";
 import { useNavigate } from "react-router-dom";
 import { AdminListSkeleton } from "./AdminSkeleton";
+import { useDemoRestriction } from "./demoRestriction";
 import '../../style/adminWarehouse.css';
 
 const AdminWarehousePage = () => {
@@ -10,6 +11,7 @@ const AdminWarehousePage = () => {
     const [selectedWarehouse, setSelectedWarehouse] = useState(null);
     const [productsLoading, setProductsLoading] = useState(false);
     const navigate = useNavigate();
+    const { readOnly, permissionMessage, blockWrite } = useDemoRestriction();
 
     useEffect(() => {
         fetchWarehouses();
@@ -32,6 +34,10 @@ const AdminWarehousePage = () => {
     };
 
     const handleDelete = async (id) => {
+        if (readOnly) {
+            blockWrite();
+            return;
+        }
         const confirmed = window.confirm("Are you sure you want to delete this warehouse? Its stored stock will also be removed.");
         if (confirmed) {
             try {
@@ -65,6 +71,7 @@ const AdminWarehousePage = () => {
         <div className="admin-warehouse-page">
             <div className="admin-warehouse-list">
                 <h2>Warehouses</h2>
+                {permissionMessage && <p className="demo-permission-message">{permissionMessage}</p>}
                 <button onClick={() => navigate('/admin/add-warehouse')}>Add Warehouse</button>
 
                 {loading ? (
@@ -89,7 +96,7 @@ const AdminWarehousePage = () => {
                                 <div className="admin-bt">
                                     <button className="admin-btn-view" onClick={() => handleViewProducts(warehouse)}>View Products</button>
                                     <button className="admin-btn-edit" onClick={() => handleEdit(warehouse.id)}>Edit</button>
-                                    <button onClick={() => handleDelete(warehouse.id)}>Delete</button>
+                                    <button className={readOnly ? "demo-no-permission" : ""} aria-disabled={readOnly} onClick={() => handleDelete(warehouse.id)}>Delete</button>
                                 </div>
                             </li>
                         ))}

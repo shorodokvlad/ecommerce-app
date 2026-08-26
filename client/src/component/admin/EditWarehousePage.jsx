@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ApiService from "../../service/ApiService";
 import { useNavigate, useParams } from "react-router-dom";
+import { useDemoRestriction } from "./demoRestriction";
 import '../../style/adminWarehouse.css';
 
 const EditWarehousePage = () => {
@@ -15,6 +16,7 @@ const EditWarehousePage = () => {
     });
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
+    const { readOnly, permissionMessage, blockWrite } = useDemoRestriction();
 
     useEffect(() => {
         const fetchWarehouse = async () => {
@@ -45,6 +47,10 @@ const EditWarehousePage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (readOnly) {
+            blockWrite();
+            return;
+        }
         try {
             const response = await ApiService.updateWarehouse(warehouseId, form);
             if (response.status === 200) {
@@ -61,6 +67,7 @@ const EditWarehousePage = () => {
 
     return (
         <div className="warehouse-form-page">
+            {permissionMessage && <p className="demo-permission-message">{permissionMessage}</p>}
             {message && <p className="message">{message}</p>}
             <form onSubmit={handleSubmit} className="warehouse-form">
                 <h2>Edit Warehouse</h2>
@@ -134,7 +141,7 @@ const EditWarehousePage = () => {
                     />
                 </div>
 
-                <button type="submit">Update Warehouse</button>
+                <button type="submit" className={readOnly ? "demo-no-permission" : ""} aria-disabled={readOnly}>Update Warehouse</button>
             </form>
         </div>
     )

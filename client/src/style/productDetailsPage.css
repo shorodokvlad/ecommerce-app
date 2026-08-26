@@ -675,6 +675,82 @@
     box-shadow: 0 6px 18px rgba(31, 78, 99, 0.35);
 }
 
+/* Zero Reviews Card Layout (Matching eMAG 0-review design) */
+.emag-zero-reviews-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 24px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.emag-zero-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.emag-zero-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.emag-zero-subtext {
+    font-size: 0.88rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.emag-zero-action-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.emag-zero-review-btn {
+    background: var(--ink, #1F4E63);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 22px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(31, 78, 99, 0.25);
+    transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.emag-zero-review-btn:hover {
+    background: #17435A;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(31, 78, 99, 0.35);
+}
+
+@media (max-width: 768px) {
+    .emag-zero-reviews-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+        padding: 20px;
+    }
+
+    .emag-zero-action-group {
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .emag-zero-review-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
 @media (max-width: 992px) {
     .emag-reviews-dashboard-card {
         grid-template-columns: 1fr 1fr;

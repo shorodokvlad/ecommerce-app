@@ -103,8 +103,10 @@ public class DashboardServiceImpl implements IDashboardService {
                 bucketEnd = end != null ? end : today;
             }
             case WEEK -> {
-                bucketStart = start != null ? start : today;
-                bucketEnd = end != null ? end : today;
+                // Default: the full current ISO week, Monday through Sunday
+                LocalDate monday = today.minusDays((long) today.getDayOfWeek().getValue() - 1L);
+                bucketStart = start != null ? start : monday;
+                bucketEnd = end != null ? end : monday.plusDays(6);
             }
             case MONTH -> {
                 bucketStart = start != null ? start : today.withDayOfMonth(1);
@@ -145,8 +147,8 @@ public class DashboardServiceImpl implements IDashboardService {
                     LocalDate sunday = monday.plusDays(6);
                     int week = monday.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
                     String label = monday.equals(sunday)
-                            ? "w" + week + "(" + monday.format(WEEK_DATE_FORMAT) + ")"
-                            : "w" + week + "(" + monday.format(WEEK_DATE_FORMAT)
+                            ? "W" + week + "(" + monday.format(WEEK_DATE_FORMAT) + ")"
+                            : "W" + week + "(" + monday.format(WEEK_DATE_FORMAT)
                             + " - " + sunday.format(WEEK_DATE_FORMAT) + ")";
                     sales.add(point(label,
                             revenueBetween(items, monday.atStartOfDay(), sunday.atTime(LocalTime.MAX))));

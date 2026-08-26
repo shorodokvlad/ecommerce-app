@@ -101,6 +101,14 @@ public class EntityDtoMapper {
         productDto.setImageUrl(product.getImageUrl());
         productDto.setStockQuantity(product.getStockQuantity());
 
+        // Only id + name: avoids lazily loading the category's whole product list
+        if (product.getCategory() != null) {
+            CategoryDto categoryDto = new CategoryDto();
+            categoryDto.setId(product.getCategory().getId());
+            categoryDto.setName(product.getCategory().getName());
+            productDto.setCategory(categoryDto);
+        }
+
         if (product.getImageUrls() != null && !product.getImageUrls().isEmpty()) {
             productDto.setImageUrls(new java.util.ArrayList<>(product.getImageUrls()));
         } else if (product.getImageUrl() != null && !product.getImageUrl().isBlank()) {

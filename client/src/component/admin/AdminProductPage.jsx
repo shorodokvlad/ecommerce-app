@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminListSkeleton } from "./AdminSkeleton";
+import { useDemoRestriction } from "./demoRestriction";
 import '../../style/adminProduct.css';
 import Pagination from "../common/Pagination";
 import ApiService from "../../service/ApiService";
@@ -17,6 +18,7 @@ const AdminProductPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const itemsPerPage = 10;
+    const { readOnly, permissionMessage, blockWrite } = useDemoRestriction();
 
     const readCache = () => {
         try {
@@ -70,6 +72,10 @@ const AdminProductPage = () => {
     };
 
     const handleDelete = async (id) => {
+        if (readOnly) {
+            blockWrite();
+            return;
+        }
         const confirmed = window.confirm("Are you sure you want to delete this product?");
         if (confirmed) {
             try {
@@ -89,6 +95,7 @@ const AdminProductPage = () => {
             ) : (
                 <div>
                     <h2>Products</h2>
+                    {permissionMessage && <p className="demo-permission-message">{permissionMessage}</p>}
                     <button className="product-btn" onClick={() => { navigate('/admin/add-product'); }}>Add product</button>
 
                     {loading ? (
@@ -108,7 +115,7 @@ const AdminProductPage = () => {
                                         </div>
                                         <div className="admin-product-actions">
                                             <button className="product-btn" onClick={() => handleEdit(product.id)}>Edit</button>
-                                            <button className="product-btn-delete" onClick={() => handleDelete(product.id)}>Delete</button>
+                                            <button className={`product-btn-delete${readOnly ? " demo-no-permission" : ""}`} aria-disabled={readOnly} onClick={() => handleDelete(product.id)}>Delete</button>
                                         </div>
                                     </li>
                                 ))}
