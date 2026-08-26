@@ -16,4 +16,7 @@ public interface IUserService {
     Response getAllUsers();
     User getLoginUser();
     Response getUserInfoAndOrderHistory();
+    Response createEmployee(UserDto employeeRequest);
+    Response updateUser(Long userId, UserDto updateRequest);
+    Response deleteUser(Long userId);
 }

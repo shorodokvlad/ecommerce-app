@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ApiService from "../../service/ApiService";
 import { AdminListSkeleton } from "./AdminSkeleton";
+import { useDemoRestriction } from "./demoRestriction";
 import "../../style/adminBanner.css";
 
 const AdminBannerPage = () => {
@@ -17,6 +18,7 @@ const AdminBannerPage = () => {
     const [displayOrder, setDisplayOrder] = useState(0);
     const [message, setMessage] = useState("");
     const [isUploading, setIsUploading] = useState(false);
+    const { readOnly, permissionMessage, blockWrite } = useDemoRestriction();
 
     useEffect(() => {
         fetchBanners();
@@ -57,6 +59,10 @@ const AdminBannerPage = () => {
     };
 
     const handleDelete = async (id) => {
+        if (readOnly) {
+            blockWrite();
+            return;
+        }
         if (window.confirm("Are you sure you want to delete this banner?")) {
             try {
                 sessionStorage.removeItem("shv_home_banners");
@@ -71,6 +77,10 @@ const AdminBannerPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (readOnly) {
+            blockWrite();
+            return;
+        }
         setMessage("");
 
         const formData = new FormData();
@@ -126,11 +136,14 @@ const AdminBannerPage = () => {
                 )}
             </div>
 
+            {permissionMessage && <p className="demo-permission-message">{permissionMessage}</p>}
+
             {message && <div style={{ padding: "10px", marginBottom: "15px", background: "#dcfce7", color: "#15803d", borderRadius: "8px" }}>{message}</div>}
 
             {showForm && (
                 <div className="banner-form-card">
                     <h3>{editingBannerId ? "Edit Banner" : "Add New Banner"}</h3>
+                    {permissionMessage && <p className="demo-permission-message">{permissionMessage}</p>}
                     <form onSubmit={handleSubmit}>
                         <div className="form-grid">
                             <div className="form-group">
@@ -206,7 +219,12 @@ const AdminBannerPage = () => {
                             <button type="button" className="btn-secondary" onClick={resetForm} disabled={isUploading}>
                                 Cancel
                             </button>
-                            <button type="submit" className="btn-primary" disabled={isUploading}>
+                            <button
+                                type="submit"
+                                className={`btn-primary${readOnly ? " demo-no-permission" : ""}`}
+                                aria-disabled={readOnly}
+                                disabled={isUploading}
+                            >
                                 {isUploading ? "Uploading..." : (editingBannerId ? "Update Banner" : "Save Banner")}
                             </button>
                         </div>
@@ -256,7 +274,11 @@ const AdminBannerPage = () => {
                                             <button className="btn-edit" onClick={() => handleEditClick(banner)}>
                                                 Edit
                                             </button>
-                                            <button className="btn-delete" onClick={() => handleDelete(banner.id)}>
+                                            <button
+                                                className={`btn-delete${readOnly ? " demo-no-permission" : ""}`}
+                                                aria-disabled={readOnly}
+                                                onClick={() => handleDelete(banner.id)}
+                                            >
                                                 Delete
                                             </button>
                                         </div>

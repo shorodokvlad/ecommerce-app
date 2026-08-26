@@ -77,7 +77,6 @@
 /Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/security/AuthUser.java
 /Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/security/CorsConfig.java
 /Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/security/CustomUserDetailsService.java
-/Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/security/DatabaseInitializer.java
 /Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/security/DeliveryDataSeeder.java
 /Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/security/JwtAuthFilter.java
 /Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/security/JwtUtils.java

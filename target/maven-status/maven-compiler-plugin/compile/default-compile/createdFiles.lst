@@ -91,7 +91,6 @@ com/shv/Ecommerce/dto/OrderRequest.class
 com/shv/Ecommerce/entity/ProductVariant.class
 com/shv/Ecommerce/service/impl/DeliveryServiceImpl.class
 com/shv/Ecommerce/security/AuthUser$AuthUserBuilder.class
-com/shv/Ecommerce/security/DatabaseInitializer.class
 com/shv/Ecommerce/dto/LocalityDto.class
 com/shv/Ecommerce/dto/DeliveryEstimateDto$DeliveryEstimateDtoBuilder.class
 com/shv/Ecommerce/service/impl/CategoryServiceImpl.class

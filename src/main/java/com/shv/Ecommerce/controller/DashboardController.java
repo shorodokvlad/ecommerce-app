@@ -22,7 +22,7 @@ public class DashboardController {
     private final IDashboardService dashboardService;
 
     @GetMapping("/stats")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'ADMIN_RESTRICTED')")
     public ResponseEntity<Response> getDashboardStats(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,

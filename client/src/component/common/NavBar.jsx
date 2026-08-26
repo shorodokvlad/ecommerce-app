@@ -196,12 +196,12 @@ const Navbar = () => {
                         </NavLink>
                     </div>
 
-                    {/* RIGHT LINK: HELP */}
+                    {/* RIGHT LINK: HELP (no page yet - not clickable) */}
                     <div className="sub-nav-right">
-                        <NavLink to="/categories" className="sub-link-item help-right-link">
+                        <button type="button" className="sub-link-item help-right-link">
                             <HelpCircle size={15} />
-                            <span>Categories</span>
-                        </NavLink>
+                            <span>Help</span>
+                        </button>
                     </div>
                 </div>
             </div>

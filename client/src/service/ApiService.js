@@ -245,6 +245,17 @@ export default class ApiService {
         return response.data;
     }
 
+    static async getAllOrderItemsByDateRange(startDate, endDate) {
+        const params = {};
+        if (startDate) params.startDate = `${startDate}T00:00:00`;
+        if (endDate) params.endDate = `${endDate}T23:59:59`;
+        const response = await axios.get(`${this.BASE_URL}/order/filter`, {
+            headers: this.getHeader(),
+            params
+        })
+        return response.data;
+    }
+
     static async updateOrderitemStatus(orderItemId, status) {
         const response = await axios.put(`${this.BASE_URL}/order/update-item-status/${orderItemId}`, {}, {
             headers: this.getHeader(),
@@ -358,6 +369,35 @@ export default class ApiService {
         return response.data;
     }
 
+    /***EMPLOYEE MANAGEMENT */
+    static async getAllUsers() {
+        const response = await axios.get(`${this.BASE_URL}/user/get-all`, {
+            headers: this.getHeader()
+        });
+        return response.data;
+    }
+
+    static async createEmployee(body) {
+        const response = await axios.post(`${this.BASE_URL}/user/create-employee`, body, {
+            headers: this.getHeader()
+        });
+        return response.data;
+    }
+
+    static async updateUser(userId, body) {
+        const response = await axios.put(`${this.BASE_URL}/user/update/${userId}`, body, {
+            headers: this.getHeader()
+        });
+        return response.data;
+    }
+
+    static async deleteUser(userId) {
+        const response = await axios.delete(`${this.BASE_URL}/user/delete/${userId}`, {
+            headers: this.getHeader()
+        });
+        return response.data;
+    }
+
     /***AUTHEMNTICATION CHECKER */
     static logout(){
         clearSession()
@@ -366,8 +406,20 @@ export default class ApiService {
         return Boolean(token) && !isJwtExpired(token)
     }
 
+    static getRole(){
+        return localStorage.getItem('role')
+    }
+
     static isAdmin(){
         const role = localStorage.getItem('role')
-        return this.isAuthenticated() && role === 'ADMIN'
+        return this.isAuthenticated() && ['ADMIN', 'MANAGER', 'ADMIN_RESTRICTED'].includes(role)
+    }
+
+    static isManager(){
+        return this.isAuthenticated() && this.getRole() === 'MANAGER'
+    }
+
+    static isRestrictedAdmin(){
+        return this.isAuthenticated() && this.getRole() === 'ADMIN_RESTRICTED'
     }
 }

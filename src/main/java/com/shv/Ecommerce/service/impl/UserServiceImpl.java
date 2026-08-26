@@ -357,4 +357,121 @@ public class UserServiceImpl implements IUserService {
                 .user(userDto)
                 .build();
     }
+
+    @Override
+    @Transactional
+    public Response createEmployee(UserDto employeeRequest) {
+        User caller = getLoginUser();
+
+        if (employeeRequest.getRole() == null) {
+            throw new InvalidCredentialsException("Role is required");
+        }
+        if (caller.getRole() == UserRole.MANAGER && employeeRequest.getRole() == UserRole.ADMIN) {
+            throw new InvalidCredentialsException("Managers cannot create ADMIN accounts");
+        }
+        if (userRepo.findByEmail(employeeRequest.getEmail()).isPresent()) {
+            throw new InvalidCredentialsException("Email is already registered: " + employeeRequest.getEmail());
+        }
+
+        String generatedPassword = generatePassword();
+
+        User user = User.builder()
+                .name(employeeRequest.getName())
+                .email(employeeRequest.getEmail())
+                .password(passwordEncoder.encode(generatedPassword))
+                .phoneNumber(employeeRequest.getPhoneNumber() != null && !employeeRequest.getPhoneNumber().isBlank()
+                        ? employeeRequest.getPhoneNumber() : "N/A")
+                .role(employeeRequest.getRole())
+                .emailVerified(true)
+                .build();
+
+        User savedUser = userRepo.save(user);
+
+        mailService.sendQuietly(
+                savedUser.getEmail(),
+                "Your SHV Store staff account",
+                "Hello " + savedUser.getName() + ",\n\n"
+                        + "An account has been created for you at SHV Store.\n\n"
+                        + "Email: " + savedUser.getEmail() + "\n"
+                        + "Temporary password: " + generatedPassword + "\n\n"
+                        + "Please log in and change your password."
+        );
+
+        UserDto userDto = entityDtoMapper.mapUserToDtoBasic(savedUser);
+        userDto.setPassword(generatedPassword);
+
+        return Response.builder()
+                .status(200)
+                .message("Employee account created successfully")
+                .user(userDto)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public Response updateUser(Long userId, UserDto updateRequest) {
+        User caller = getLoginUser();
+        User target = userRepo.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        if (caller.getRole() == UserRole.MANAGER
+                && (target.getRole() == UserRole.ADMIN || updateRequest.getRole() == UserRole.ADMIN)) {
+            throw new InvalidCredentialsException("Managers cannot update ADMIN accounts");
+        }
+
+        if (updateRequest.getEmail() != null && !updateRequest.getEmail().equals(target.getEmail())) {
+            userRepo.findByEmail(updateRequest.getEmail()).ifPresent(existing -> {
+                if (!existing.getId().equals(target.getId())) {
+                    throw new InvalidCredentialsException("Email is already registered: " + updateRequest.getEmail());
+                }
+            });
+            target.setEmail(updateRequest.getEmail());
+        }
+        if (updateRequest.getName() != null && !updateRequest.getName().isBlank()) {
+            target.setName(updateRequest.getName());
+        }
+        if (updateRequest.getRole() != null) {
+            target.setRole(updateRequest.getRole());
+        }
+
+        User savedUser = userRepo.save(target);
+
+        return Response.builder()
+                .status(200)
+                .message("User updated successfully")
+                .user(entityDtoMapper.mapUserToDtoBasic(savedUser))
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public Response deleteUser(Long userId) {
+        User caller = getLoginUser();
+        User target = userRepo.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        if (target.getId().equals(caller.getId())) {
+            throw new InvalidCredentialsException("You cannot delete your own account");
+        }
+        if (caller.getRole() == UserRole.MANAGER && target.getRole() == UserRole.ADMIN) {
+            throw new InvalidCredentialsException("Managers cannot delete ADMIN accounts");
+        }
+
+        userRepo.delete(target);
+
+        return Response.builder()
+                .status(200)
+                .message("User deleted successfully")
+                .build();
+    }
+
+    private String generatePassword() {
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+        java.security.SecureRandom random = new java.security.SecureRandom();
+        StringBuilder password = new StringBuilder();
+        for (int i = 0; i < 10; i++) {
+            password.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return password.toString();
+    }
 }

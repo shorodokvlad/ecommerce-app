@@ -71,7 +71,7 @@ public class ReviewServiceImpl implements IReviewService {
                 .orElseThrow(() -> new NotFoundException("Review not found"));
 
         boolean isOwner = review.getUser().getId().equals(user.getId());
-        boolean isAdmin = user.getRole() == UserRole.ADMIN;
+        boolean isAdmin = user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.MANAGER;
 
         if (!isOwner && !isAdmin) {
             throw new InvalidCredentialsException("You can only delete your own reviews");

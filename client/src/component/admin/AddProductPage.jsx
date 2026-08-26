@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import ApiService from "../../service/ApiService";
 import BlueprintManagerModal, { getStoredBlueprints, saveStoredBlueprints } from "./BlueprintManagerModal";
 import SpecBuilder from "./SpecBuilder";
+import { useDemoRestriction } from "./demoRestriction";
 import '../../style/addProduct.css';
 
 const BUILT_IN_BLUEPRINTS = [
@@ -50,6 +51,7 @@ const AddProductPage = () => {
     const [customBlueprints, setCustomBlueprints] = useState([]);
     const [isBlueprintModalOpen, setIsBlueprintModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { readOnly, permissionMessage, blockWrite } = useDemoRestriction();
 
     const navigate = useNavigate();
 
@@ -266,6 +268,11 @@ const AddProductPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (readOnly) {
+            blockWrite();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
         setIsSubmitting(true);
         try {
             const hasPhotos = variants.some((v) => {
@@ -355,6 +362,7 @@ const AddProductPage = () => {
         <div>
             <form onSubmit={handleSubmit} className="product-form">
                 <h2>Add Product</h2>
+                {permissionMessage && <p className="demo-permission-message">{permissionMessage}</p>}
                 {message && <div className="message">{message}</div>}
 
                 <div className="form-group">
@@ -371,7 +379,6 @@ const AddProductPage = () => {
                     <label>Product Name</label>
                     <input
                         type="text"
-                        placeholder="e.g. iPhone 17e, iPad Pro 13-inch M4, Apple Watch Ultra 2"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
@@ -651,6 +658,8 @@ const AddProductPage = () => {
                 <button
                     type="submit"
                     disabled={isSubmitting}
+                    className={readOnly ? "demo-no-permission" : ""}
+                    aria-disabled={readOnly}
                     style={{ marginTop: "16px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                 >
                     {isSubmitting ? (

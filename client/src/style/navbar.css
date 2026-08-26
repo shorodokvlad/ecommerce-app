@@ -380,6 +380,13 @@
     margin-left: auto;
 }
 
+button.sub-link-item {
+    background: none;
+    border: none;
+    font-family: inherit;
+    cursor: default;
+}
+
 .sell-on-store-link {
     display: inline-flex;
     align-items: center;

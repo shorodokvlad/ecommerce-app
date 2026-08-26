@@ -20,7 +20,7 @@ public class BannerController {
     }
 
     @GetMapping("/all")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'ADMIN_RESTRICTED')")
     public ResponseEntity<Response> getAllBanners() {
         return ResponseEntity.ok(bannerService.getAllBanners());
     }
@@ -31,7 +31,7 @@ public class BannerController {
     }
 
     @PostMapping("/create")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     public ResponseEntity<Response> createBanner(
             @RequestParam(required = false) MultipartFile image,
             @RequestParam(required = false) String imageUrl,
@@ -44,7 +44,7 @@ public class BannerController {
     }
 
     @PutMapping("/update/{bannerId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     public ResponseEntity<Response> updateBanner(
             @PathVariable Long bannerId,
             @RequestParam(required = false) MultipartFile image,
@@ -58,7 +58,7 @@ public class BannerController {
     }
 
     @DeleteMapping("/delete/{bannerId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER')")
     public ResponseEntity<Response> deleteBanner(@PathVariable Long bannerId) {
         return ResponseEntity.ok(bannerService.deleteBanner(bannerId));
     }

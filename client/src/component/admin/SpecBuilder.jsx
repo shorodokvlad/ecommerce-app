@@ -194,14 +194,12 @@ const SpecBuilder = ({ sections, onChange }) => {
                                         <input
                                             type="text"
                                             className="spec-input-label"
-                                            placeholder="e.g. Type, Bluetooth, Colors..."
                                             value={item.label}
                                             onChange={(e) => handleItemChange(sIdx, iIdx, 'label', e.target.value)}
                                         />
                                         <input
                                             type="text"
                                             className="spec-input-val"
-                                            placeholder="e.g. Over the ear, 5.3, Midnight..."
                                             value={item.value}
                                             onChange={(e) => handleItemChange(sIdx, iIdx, 'value', e.target.value)}
                                         />

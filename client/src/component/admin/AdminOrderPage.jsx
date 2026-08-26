@@ -11,7 +11,8 @@ const AdminOrdersPage = () => {
     const [orders, setOrders] = useState([]);
     const [filteredOrders, setFilteredOrders] = useState([]);
     const [statusFilter, setStatusFilter] = useState('');
-    const [searchStatus, setSearchStatus] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
     const [loading, setLoading] = useState(true);
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -21,17 +22,20 @@ const AdminOrdersPage = () => {
 
     const navigate = useNavigate();
 
+    const dateFilterActive = Boolean(startDate || endDate);
+
     useEffect(() => {
         fetchOrders();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchStatus, currentPage]);
+    }, [startDate, endDate, currentPage]);
 
     const fetchOrders = async () => {
         try {
             setLoading(true);
+            setError(null);
             let response;
-            if (searchStatus) {
-                response = await ApiService.getAllOrderItemsByStatus(searchStatus);
+            if (dateFilterActive) {
+                response = await ApiService.getAllOrderItemsByDateRange(startDate, endDate);
             } else {
                 response = await ApiService.getAllOrders();
             }
@@ -41,10 +45,17 @@ const AdminOrdersPage = () => {
             setOrders(orderList);
             setFilteredOrders(orderList.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage));
         } catch (error) {
-            setError(error.response?.data?.message || error.message || 'unable to fetch orders');
-            setTimeout(() => {
-                setError('');
-            }, 3000);
+            if (error.response?.status === 404) {
+                // No orders found for the selected date range
+                setOrders([]);
+                setFilteredOrders([]);
+                setTotalPages(0);
+            } else {
+                setError(error.response?.data?.message || error.message || 'unable to fetch orders');
+                setTimeout(() => {
+                    setError('');
+                }, 3000);
+            }
         } finally {
             setLoading(false);
         }
@@ -65,8 +76,22 @@ const AdminOrdersPage = () => {
         }
     };
 
-    const handleSearchStatusChange = async (e) => {
-        setSearchStatus(e.target.value);
+    const handleStartDateChange = (e) => {
+        setStartDate(e.target.value);
+        setStatusFilter('');
+        setCurrentPage(1);
+    };
+
+    const handleEndDateChange = (e) => {
+        setEndDate(e.target.value);
+        setStatusFilter('');
+        setCurrentPage(1);
+    };
+
+    const clearDateFilter = () => {
+        setStartDate('');
+        setEndDate('');
+        setStatusFilter('');
         setCurrentPage(1);
     };
 
@@ -88,14 +113,16 @@ const AdminOrdersPage = () => {
                         ))}
                     </select>
                 </div>
-                <div className="searchStatus">
-                    <label>Search By Status</label>
-                    <select value={searchStatus} onChange={handleSearchStatusChange}>
-                        <option value="">All</option>
-                        {OrderStatus.map(status => (
-                            <option key={status} value={status}>{status}</option>
-                        ))}
-                    </select>
+                <div className="dateFilter">
+                    <label>Filter By Date</label>
+                    <div className="date-filter-inputs">
+                        <input type="date" value={startDate} onChange={handleStartDateChange} />
+                        <span>—</span>
+                        <input type="date" value={endDate} onChange={handleEndDateChange} />
+                        {dateFilterActive && (
+                            <button type="button" className="date-filter-clear" onClick={clearDateFilter}>Clear</button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -133,6 +160,9 @@ const AdminOrdersPage = () => {
                             })}
                         </tbody>
                     </table>
+                    {filteredOrders.length === 0 && (
+                        <p className="orders-empty-hint">No orders found for the selected filters.</p>
+                    )}
 
                     <Pagination
                         currentPage={currentPage}
