@@ -35,14 +35,31 @@
     margin-bottom: 2px;
 }
 
+.emag-badges-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
 .emag-badge {
-    font-size: 0.66rem;
+    font-size: 0.65rem;
     font-weight: 800;
     padding: 2px 7px;
     border-radius: 4px;
     color: #ffffff;
     letter-spacing: 0.02em;
     line-height: 1.2;
+}
+
+.badge-best-seller {
+    background: linear-gradient(135deg, #8D7BEA 0%, #6b56d8 100%);
+    box-shadow: 0 2px 5px rgba(141, 123, 234, 0.25);
+}
+
+.badge-top-rated {
+    background: linear-gradient(135deg, #1F4E63 0%, #17435A 100%);
+    box-shadow: 0 2px 5px rgba(31, 78, 99, 0.2);
 }
 
 .badge-genius {

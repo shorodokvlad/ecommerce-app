@@ -2,16 +2,23 @@ package com.shv.Ecommerce.service.impl;
 
 import com.shv.Ecommerce.dto.DashboardStatsDto;
 import com.shv.Ecommerce.dto.SalesPointDto;
+import com.shv.Ecommerce.dto.TopProductDto;
+import com.shv.Ecommerce.dto.TopProductsDto;
 import com.shv.Ecommerce.entity.OrderItem;
+import com.shv.Ecommerce.entity.Product;
 import com.shv.Ecommerce.enums.OrderStatus;
 import com.shv.Ecommerce.repository.OrderItemRepo;
+import com.shv.Ecommerce.repository.ProductRepo;
+import com.shv.Ecommerce.repository.ReviewRepo;
 import com.shv.Ecommerce.service.interf.IDashboardService;
 import com.shv.Ecommerce.specification.OrderItemSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -20,11 +27,17 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.time.temporal.IsoFields;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +49,9 @@ public class DashboardServiceImpl implements IDashboardService {
     private static final Set<OrderStatus> PENDING_STATUSES =
             Set.of(OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.SHIPPED);
 
+    private static final BigDecimal TOP_RATED_THRESHOLD = new BigDecimal("4.8");
+    private static final int TOP_PRODUCTS_LIMIT = 8;
+
     private static final DateTimeFormatter DAY_LABEL_FORMAT =
             DateTimeFormatter.ofPattern("HH:00", Locale.ENGLISH);
 
@@ -46,6 +62,8 @@ public class DashboardServiceImpl implements IDashboardService {
             DateTimeFormatter.ofPattern("d.MM", Locale.ENGLISH);
 
     private final OrderItemRepo orderItemRepo;
+    private final ProductRepo productRepo;
+    private final ReviewRepo reviewRepo;
 
     @Override
     public DashboardStatsDto getDashboardStats(LocalDateTime startDate, LocalDateTime endDate, String period) {
@@ -86,6 +104,127 @@ public class DashboardServiceImpl implements IDashboardService {
                 .sales(buildSalesSeries(items, startDate, endDate, period))
                 .build();
     }
+
+    @Override
+    @Cacheable(cacheNames = "topProducts", key = "'all'")
+    public TopProductsDto getTopProducts() {
+        return TopProductsDto.builder()
+                .topSellingProducts(buildTopSellingProducts())
+                .topRatedProducts(buildTopRatedProducts())
+                .build();
+    }
+
+    private List<TopProductDto> buildTopSellingProducts() {
+        Map<Long, Long> totalSoldByProduct = new HashMap<>();
+        for (Object[] row : orderItemRepo.findTotalSoldByProduct(REVENUE_EXCLUDED_STATUSES)) {
+            Long productId = row[0] != null ? ((Number) row[0]).longValue() : null;
+            long totalSold = row[1] != null ? ((Number) row[1]).longValue() : 0L;
+            if (productId != null) {
+                totalSoldByProduct.put(productId, totalSold);
+            }
+        }
+
+        if (totalSoldByProduct.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, Product> productById = productRepo.findAllById(totalSoldByProduct.keySet()).stream()
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+        // Best seller per category (products without a category are their own group).
+        Map<Object, SalesEntry> bestPerCategory = new LinkedHashMap<>();
+        for (Map.Entry<Long, Long> entry : totalSoldByProduct.entrySet()) {
+            Product product = productById.get(entry.getKey());
+            if (product == null) {
+                continue;
+            }
+            Object groupKey = product.getCategory() != null
+                    ? product.getCategory().getId()
+                    : "p" + product.getId();
+            SalesEntry candidate = new SalesEntry(product, entry.getValue());
+            SalesEntry current = bestPerCategory.get(groupKey);
+            if (current == null || candidate.totalSold() > current.totalSold()
+                    || (candidate.totalSold() == current.totalSold()
+                    && candidate.product().getId() < current.product().getId())) {
+                bestPerCategory.put(groupKey, candidate);
+            }
+        }
+
+        List<SalesEntry> winners = new ArrayList<>(bestPerCategory.values());
+        winners.sort(Comparator
+                .comparingLong(SalesEntry::totalSold).reversed()
+                .thenComparing(entry -> entry.product().getName(), String.CASE_INSENSITIVE_ORDER));
+
+        List<TopProductDto> result = new ArrayList<>();
+        for (int i = 0; i < Math.min(winners.size(), TOP_PRODUCTS_LIMIT); i++) {
+            SalesEntry entry = winners.get(i);
+            result.add(toTopProductDto(entry.product(), i + 1)
+                    .totalSold(entry.totalSold())
+                    .build());
+        }
+        return result;
+    }
+
+    private List<TopProductDto> buildTopRatedProducts() {
+        List<RatedEntry> ratedEntries = new ArrayList<>();
+        for (Object[] row : reviewRepo.findAverageRatingByProduct()) {
+            Long productId = row[0] != null ? ((Number) row[0]).longValue() : null;
+            double average = row[1] != null ? ((Number) row[1]).doubleValue() : 0;
+            int reviewCount = row[2] != null ? ((Number) row[2]).intValue() : 0;
+            if (productId == null) {
+                continue;
+            }
+            BigDecimal rounded = BigDecimal.valueOf(average).setScale(1, RoundingMode.HALF_UP);
+            if (rounded.compareTo(TOP_RATED_THRESHOLD) >= 0) {
+                ratedEntries.add(new RatedEntry(productId, rounded, reviewCount));
+            }
+        }
+
+        if (ratedEntries.isEmpty()) {
+            return List.of();
+        }
+
+        ratedEntries.sort(Comparator
+                .comparing(RatedEntry::averageRating).reversed()
+                .thenComparing(Comparator.comparingInt(RatedEntry::reviewCount).reversed()));
+
+        List<Long> productIds = ratedEntries.stream().map(RatedEntry::productId).toList();
+        Map<Long, Product> productById = productRepo.findAllById(productIds).stream()
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+        List<TopProductDto> result = new ArrayList<>();
+        for (int i = 0; i < Math.min(ratedEntries.size(), TOP_PRODUCTS_LIMIT); i++) {
+            RatedEntry entry = ratedEntries.get(i);
+            Product product = productById.get(entry.productId());
+            if (product == null) {
+                continue;
+            }
+            result.add(toTopProductDto(product, i + 1)
+                    .averageRating(entry.averageRating())
+                    .reviewCount(entry.reviewCount())
+                    .build());
+        }
+        return result;
+    }
+
+    private TopProductDto.TopProductDtoBuilder toTopProductDto(Product product, int rank) {
+        TopProductDto.TopProductDtoBuilder builder = TopProductDto.builder()
+                .rank(rank)
+                .productId(product.getId())
+                .name(product.getName())
+                .imageUrl(product.getImageUrl())
+                .price(product.getPrice());
+        if (product.getCategory() != null) {
+            builder.categoryId(product.getCategory().getId());
+            builder.categoryName(product.getCategory().getName());
+        }
+        return builder;
+    }
+
+    private record SalesEntry(Product product, long totalSold) {}
+
+    private record RatedEntry(Long productId, BigDecimal averageRating, int reviewCount) {}
+
 // Aggregate revenue into buckets based on the requested period and (optional) custom date range.
     private List<SalesPointDto> buildSalesSeries(List<OrderItem> items, LocalDateTime startDate, LocalDateTime endDate, String period) {
         SalesPeriod salesPeriod = parsePeriod(period);

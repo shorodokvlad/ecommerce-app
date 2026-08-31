@@ -33,6 +33,8 @@
 /Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/dto/ReviewDto.java
 /Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/dto/ReviewRequest.java
 /Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/dto/SalesPointDto.java
+/Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/dto/TopProductDto.java
+/Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/dto/TopProductsDto.java
 /Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/dto/UserDto.java
 /Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/dto/VerifyEmailRequest.java
 /Users/vladshorodok/Desktop/home/projects/Java/repo/ecommerce/spring-ecommerce-app/src/main/java/com/shv/Ecommerce/dto/WarehouseDto.java

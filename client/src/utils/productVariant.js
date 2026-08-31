@@ -63,6 +63,14 @@ export const findVariantFromSearch = (product, search) => {
     )) || null;
 };
 
+export const getDefaultInStockVariant = (product) => {
+    const variants = product?.variants || [];
+    if (variants.length === 0) return null;
+
+    const inStockVariant = variants.find((variant) => (variant.stockQuantity ?? 0) > 0);
+    return inStockVariant || variants[0] || null;
+};
+
 export const configureProduct = (product, variant = null) => {
     if (!product) return null;
 

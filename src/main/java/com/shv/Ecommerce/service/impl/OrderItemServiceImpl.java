@@ -21,6 +21,7 @@ import com.shv.Ecommerce.service.interf.IUserService;
 import com.shv.Ecommerce.specification.OrderItemSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -44,6 +45,7 @@ public class OrderItemServiceImpl implements IOrderItemService {
     private final EntityDtoMapper entityDtoMapper;
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "topProducts", allEntries = true)
     public Response placeOrder(OrderRequest orderRequest) {
         User user = userService.getLoginUser();
 
@@ -136,6 +138,7 @@ public class OrderItemServiceImpl implements IOrderItemService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "topProducts", allEntries = true)
     public Response updateOrderItemStatus(Long orderItemId, String status) {
         OrderItem orderItem = orderItemRepo.findById(orderItemId)
                 .orElseThrow(()->new NotFoundException("Order Item not found"));

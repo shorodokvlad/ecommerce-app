@@ -109,4 +109,11 @@ public class ProductController {
     ) {
         return ResponseEntity.ok(productService.searchProduct(searchValue, page, size));
     }
+
+    @GetMapping("/home-feed")
+    public ResponseEntity<Response> getHomeFeedProducts(
+            @RequestParam(required = false) Integer limit
+    ) {
+        return ResponseEntity.ok(productService.getHomeFeedProducts(limit));
+    }
 }

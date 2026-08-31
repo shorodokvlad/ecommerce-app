@@ -11,7 +11,7 @@ import StarRating from "../common/StarRating";
 import DeliveryEstimate from "../delivery/DeliveryEstimate";
 import ApiService from "../../service/ApiService";
 import { parseSpecifications } from "../../utils/specParser";
-import { configureProduct, findVariantFromSearch, getProductIdFromRoute, getProductPath } from "../../utils/productVariant";
+import { configureProduct, findVariantFromSearch, getDefaultInStockVariant, getProductIdFromRoute, getProductPath } from "../../utils/productVariant";
 import { CheckCircle2, Star } from "lucide-react";
 import '../../style/productDetailsPage.css';
 
@@ -68,6 +68,10 @@ const ProductDetailsPage = () => {
 
     const isAuthenticated = ApiService.isAuthenticated();
     const isAdmin = ApiService.isAdmin();
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [productId]);
 
     useEffect(() => {
         const fetchReviews = async () => {
@@ -138,7 +142,7 @@ const ProductDetailsPage = () => {
         if (!product?.variants?.length) return;
 
         const requestedVariant = findVariantFromSearch(product, location.search);
-        const nextVariant = requestedVariant || product.variants[0];
+        const nextVariant = requestedVariant || getDefaultInStockVariant(product) || product.variants[0];
         const nextIndex = product.variants.findIndex((variant) => variant.id === nextVariant.id);
 
         setSelectedVariantIndex(nextIndex >= 0 ? nextIndex : 0);
@@ -151,13 +155,33 @@ const ProductDetailsPage = () => {
         if (!product || !product.variants) return {};
         const groups = {};
 
-        product.variants.forEach((v) => {
+        const sortedVariants = [...product.variants].sort((a, b) => (a.id || 0) - (b.id || 0));
+
+        sortedVariants.forEach((v) => {
             if (v.attributes) {
                 Object.entries(v.attributes).forEach(([k, val]) => {
                     if (!groups[k]) groups[k] = [];
                     if (!groups[k].includes(val)) {
                         groups[k].push(val);
                     }
+                });
+            }
+        });
+
+        Object.keys(groups).forEach((key) => {
+            if (/(storage|capacity|memory|ram)/i.test(key)) {
+                groups[key].sort((a, b) => {
+                    const parseVal = (str) => {
+                        const m = String(str || '').match(/^([\d.]+)\s*(GB|TB|MB|KB)?$/i);
+                        if (!m) return 0;
+                        let n = parseFloat(m[1]);
+                        const unit = (m[2] || 'GB').toUpperCase();
+                        if (unit === 'TB') n *= 1024;
+                        if (unit === 'MB') n /= 1024;
+                        if (unit === 'KB') n /= (1024 * 1024);
+                        return n;
+                    };
+                    return parseVal(a) - parseVal(b);
                 });
             }
         });
@@ -169,14 +193,18 @@ const ProductDetailsPage = () => {
     const activeVariant = useMemo(() => {
         if (!product || !product.variants || product.variants.length === 0) return null;
 
-        const exactMatch = product.variants.find((v) => {
-            if (!v.attributes) return false;
-            return Object.entries(selectedAttributes).every(
-                ([k, val]) => v.attributes[k] === val
-            );
-        });
+        const hasSelectedAttrs = Object.keys(selectedAttributes).length > 0;
+        if (hasSelectedAttrs) {
+            const exactMatch = product.variants.find((v) => {
+                if (!v.attributes) return false;
+                return Object.entries(selectedAttributes).every(
+                    ([k, val]) => v.attributes[k] === val
+                );
+            });
+            if (exactMatch) return exactMatch;
+        }
 
-        return exactMatch || product.variants[selectedVariantIndex] || product.variants[0];
+        return product.variants[selectedVariantIndex] || product.variants[0];
     }, [product, selectedAttributes, selectedVariantIndex]);
 
     const handleSelectAttribute = (attrKey, val) => {
@@ -224,13 +252,16 @@ const ProductDetailsPage = () => {
     );
 
     useEffect(() => {
-        if (!product) return;
+        if (!product || !activeVariant) return;
+        // Don't sync URL until attributes are populated for products with variants
+        if (product.variants?.length > 0 && Object.keys(selectedAttributes).length === 0) return;
+
         const canonicalPath = getProductPath(product, activeVariant);
         const currentPath = `${location.pathname}${location.search}`;
         if (canonicalPath !== currentPath) {
             navigate(canonicalPath, { replace: true });
         }
-    }, [activeVariant, location.pathname, location.search, navigate, product]);
+    }, [activeVariant, location.pathname, location.search, navigate, product, selectedAttributes]);
 
     const specSections = useMemo(() => parseSpecifications(product?.description), [product?.description]);
 

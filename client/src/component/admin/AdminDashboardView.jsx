@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { AdminDashboardSkeleton } from "./AdminSkeleton";
 import ApiService from "../../service/ApiService";
+import { StarRating } from "../common/StarRating";
 import "../../style/adminDashboard.css";
 import {
     Search, Calendar, Bell, DollarSign, ShoppingCart,
@@ -27,6 +29,42 @@ const formatDay = (ymd) => {
     return `${parseInt(d, 10)} ${MONTH_LABELS[parseInt(m, 10) - 1]}`;
 };
 
+/* Top Products local cache — renders the two tables instantly on repeat visits,
+   then refreshes from the API in the background (avoids the heavy aggregation call). */
+const TOP_PRODUCTS_CACHE_KEY = "shv_admin_top_products";
+const TOP_PRODUCTS_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+const readTopProductsCache = () => {
+    try {
+        const raw = localStorage.getItem(TOP_PRODUCTS_CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !parsed.savedAt || !parsed.data) return null;
+        if (Date.now() - parsed.savedAt > TOP_PRODUCTS_CACHE_TTL_MS) {
+            localStorage.removeItem(TOP_PRODUCTS_CACHE_KEY);
+            return null;
+        }
+        const data = parsed.data;
+        return {
+            topSellingProducts: Array.isArray(data.topSellingProducts) ? data.topSellingProducts : [],
+            topRatedProducts: Array.isArray(data.topRatedProducts) ? data.topRatedProducts : []
+        };
+    } catch {
+        return null;
+    }
+};
+
+const writeTopProductsCache = (data) => {
+    try {
+        localStorage.setItem(TOP_PRODUCTS_CACHE_KEY, JSON.stringify({
+            savedAt: Date.now(),
+            data
+        }));
+    } catch {
+        // localStorage unavailable — the API fallback still works
+    }
+};
+
 const AdminDashboardView = () => {
     const [stats, setStats] = useState({
         totalRevenue: 0,
@@ -43,6 +81,8 @@ const AdminDashboardView = () => {
     const [statsLoading, setStatsLoading] = useState(false);
     const [draftRange, setDraftRange] = useState({ start: "", end: "" });
     const [hoveredPoint, setHoveredPoint] = useState(null);
+    const [topProducts, setTopProducts] = useState({ topSellingProducts: [], topRatedProducts: [] });
+    const [topProductsLoading, setTopProductsLoading] = useState(true);
 
     useEffect(() => {
         // Sales Analytics chart — refreshed ONLY when the timeframe tab changes.
@@ -93,6 +133,33 @@ const AdminDashboardView = () => {
         };
         fetchStatsData();
     }, [dateRange]);
+
+    useEffect(() => {
+        // Top Rated + Top Selling products — served instantly from localStorage
+        // (when fresh), then refreshed from the API in the background.
+        const fetchTopProducts = async () => {
+            const cached = readTopProductsCache();
+            if (cached) {
+                setTopProducts(cached);
+                setTopProductsLoading(false);
+            }
+            try {
+                const res = await ApiService.getDashboardTopProducts();
+                const data = res.topProducts || {};
+                const normalized = {
+                    topSellingProducts: Array.isArray(data.topSellingProducts) ? data.topSellingProducts : [],
+                    topRatedProducts: Array.isArray(data.topRatedProducts) ? data.topRatedProducts : []
+                };
+                setTopProducts(normalized);
+                writeTopProductsCache(normalized);
+            } catch (err) {
+                console.error("Dashboard top products fetch error:", err);
+            } finally {
+                setTopProductsLoading(false);
+            }
+        };
+        fetchTopProducts();
+    }, []);
 
     // Ensure the chosen from/to dates are in the correct order before fetching.
     const applyDateRange = () => {
@@ -375,6 +442,194 @@ const AdminDashboardView = () => {
                         </div>
                     </>
                 )}
+            </div>
+{/* TOP RATED + TOP SELLING PRODUCTS (BEST SELLER PER CATEGORY) */}
+            <div className="top-products-grid">
+                {/* TOP RATED ITEMS */}
+                <div className="top-products-card">
+                    <div className="top-products-header">
+                        <div>
+                            <h3 className="top-products-title">Top Rated Items</h3>
+                            <span className="top-products-sub">Highest rated by customer reviews</span>
+                        </div>
+                    </div>
+
+                    {topProductsLoading ? (
+                        <div className="top-table-wrap">
+                            <table className="top-products-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Product</th>
+                                        <th>Rating</th>
+                                        <th>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {[1, 2, 3, 4, 5].map((i) => (
+                                        <tr key={i}>
+                                            <td className="top-rank-cell">
+                                                <div className="skeleton-shimmer" style={{ width: "16px", height: "16px", borderRadius: "4px" }} />
+                                            </td>
+                                            <td>
+                                                <div className="top-product-cell">
+                                                    <div className="skeleton-shimmer" style={{ width: "38px", height: "38px", borderRadius: "8px", flexShrink: 0 }} />
+                                                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
+                                                        <div className="skeleton-shimmer" style={{ width: i % 2 === 0 ? "75%" : "60%", height: "14px", borderRadius: "4px" }} />
+                                                        <div className="skeleton-shimmer" style={{ width: "40%", height: "10px", borderRadius: "4px" }} />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="skeleton-shimmer" style={{ width: "85px", height: "18px", borderRadius: "6px" }} />
+                                            </td>
+                                            <td className="top-price-cell">
+                                                <div className="skeleton-shimmer" style={{ width: "55px", height: "16px", borderRadius: "4px" }} />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : topProducts.topRatedProducts.length === 0 ? (
+                        <p className="top-products-empty">No highly rated products yet — products with great customer reviews will appear here.</p>
+                    ) : (
+                        <div className="top-table-wrap">
+                            <table className="top-products-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Product</th>
+                                        <th>Rating</th>
+                                        <th>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {topProducts.topRatedProducts.map(p => (
+                                        <tr key={p.productId}>
+                                            <td className="top-rank-cell">{p.rank}</td>
+                                            <td>
+                                                <div className="top-product-cell">
+                                                    {p.imageUrl ? (
+                                                        <img className="top-product-thumb" src={p.imageUrl} alt={p.name} />
+                                                    ) : (
+                                                        <div className="top-product-thumb top-product-thumb--empty">•</div>
+                                                    )}
+                                                    <div>
+                                                        <Link to={`/product/${p.productId}`} className="top-product-name" title={p.name}>
+                                                            {p.name}
+                                                        </Link>
+                                                        <div className="top-product-cat">{p.categoryName || "Uncategorized"}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="top-rating-cell">
+                                                    <StarRating value={p.averageRating} size={13} />
+                                                    <span className="top-rating-value">{Number(p.averageRating).toFixed(1)}</span>
+                                                    <span className="top-review-count">({p.reviewCount})</span>
+                                                </div>
+                                            </td>
+                                            <td className="top-price-cell">€{formatPrice(p.price)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+{/* TOP SELLING PRODUCTS */}
+                <div className="top-products-card">
+                    <div className="top-products-header">
+                        <div>
+                            <h3 className="top-products-title">Top Selling Products</h3>
+                            <span className="top-products-sub">Best seller per category by units sold</span>
+                        </div>
+                    </div>
+
+                    {topProductsLoading ? (
+                        <div className="top-table-wrap">
+                            <table className="top-products-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Product</th>
+                                        <th>Units Sold</th>
+                                        <th>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {[1, 2, 3, 4, 5].map((i) => (
+                                        <tr key={i}>
+                                            <td className="top-rank-cell">
+                                                <div className="skeleton-shimmer" style={{ width: "16px", height: "16px", borderRadius: "4px" }} />
+                                            </td>
+                                            <td>
+                                                <div className="top-product-cell">
+                                                    <div className="skeleton-shimmer" style={{ width: "38px", height: "38px", borderRadius: "8px", flexShrink: 0 }} />
+                                                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
+                                                        <div className="skeleton-shimmer" style={{ width: i % 2 === 0 ? "70%" : "80%", height: "14px", borderRadius: "4px" }} />
+                                                        <div className="skeleton-shimmer" style={{ width: "35%", height: "10px", borderRadius: "4px" }} />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="skeleton-shimmer" style={{ width: "65px", height: "18px", borderRadius: "6px" }} />
+                                            </td>
+                                            <td className="top-price-cell">
+                                                <div className="skeleton-shimmer" style={{ width: "55px", height: "16px", borderRadius: "4px" }} />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : topProducts.topSellingProducts.length === 0 ? (
+                        <p className="top-products-empty">No sales yet — completed orders will appear here.</p>
+                    ) : (
+                        <div className="top-table-wrap">
+                            <table className="top-products-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Product</th>
+                                        <th>Units Sold</th>
+                                        <th>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {topProducts.topSellingProducts.map(p => (
+                                        <tr key={p.productId}>
+                                            <td className="top-rank-cell">{p.rank}</td>
+                                            <td>
+                                                <div className="top-product-cell">
+                                                    {p.imageUrl ? (
+                                                        <img className="top-product-thumb" src={p.imageUrl} alt={p.name} />
+                                                    ) : (
+                                                        <div className="top-product-thumb top-product-thumb--empty">•</div>
+                                                    )}
+                                                    <div>
+                                                        <Link to={`/product/${p.productId}`} className="top-product-name" title={p.name}>
+                                                            {p.name}
+                                                        </Link>
+                                                        <div className="top-product-cat">{p.categoryName || "Uncategorized"}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="top-sold-cell">
+                                                    <span className="top-sold-count">{Number(p.totalSold).toLocaleString()}</span>
+                                                    <span className="top-sold-unit">sold</span>
+                                                </div>
+                                            </td>
+                                            <td className="top-price-cell">€{formatPrice(p.price)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

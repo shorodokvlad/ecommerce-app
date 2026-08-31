@@ -13,6 +13,7 @@ import com.shv.Ecommerce.repository.ProductRepo;
 import com.shv.Ecommerce.repository.ReviewRepo;
 import com.shv.Ecommerce.service.interf.IReviewService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +42,7 @@ public class ReviewServiceImpl implements IReviewService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "topProducts", allEntries = true)
     public Response createReview(Long productId, Integer rating, String content, User user) {
         if (rating == null || rating < 1 || rating > 5) {
             throw new InvalidCredentialsException("Rating must be between 1 and 5 stars");
@@ -66,6 +68,7 @@ public class ReviewServiceImpl implements IReviewService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "topProducts", allEntries = true)
     public Response deleteReview(Long reviewId, User user) {
         Review review = reviewRepo.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("Review not found"));

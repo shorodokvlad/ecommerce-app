@@ -4,7 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useFavorites } from "../context/FavoritesContext";
 import AddToCartModal from "./AddToCartModal";
 import StarRating from "./StarRating";
-import { configureProduct } from "../../utils/productVariant";
+import { configureProduct, getDefaultInStockVariant } from "../../utils/productVariant";
 import { Heart, ShoppingBag } from "lucide-react";
 import '../../style/productList.css';
 
@@ -25,7 +25,7 @@ const ProductList = ({ products }) => {
     return (
         <div className="product-list emag-6-cols">
             {products.map((product) => {
-                const defaultVariant = product.variants?.[0] || null;
+                const defaultVariant = getDefaultInStockVariant(product);
                 const configuredProduct = configureProduct(product, defaultVariant);
                 const outOfStock = configuredProduct.stockQuantity === 0;
                 const favorited = isFavorite(configuredProduct.favoriteKey);
@@ -33,10 +33,21 @@ const ProductList = ({ products }) => {
                 const currentPrice = configuredProduct.price || 0;
                 const formattedPrice = currentPrice % 1 === 0 ? currentPrice.toFixed(0) : currentPrice.toFixed(2);
 
+                const isBestSeller = Boolean(product.isBestSeller || product.bestSeller || product.isTopSelling || product.topSelling);
+                const isTopRated = Boolean(product.isTopRated || product.topRated || (product.averageRating && product.averageRating >= 4.8));
+
                 return (
                     <article className="emag-product-card" key={product.id}>
-                        {/* FAVORITE BUTTON */}
-                        <div className="emag-card-top-bar" style={{ justifyContent: "flex-end" }}>
+                        {/* CARD TOP BAR: BADGES & FAVORITE HEART */}
+                        <div className="emag-card-top-bar">
+                            <div className="emag-badges-wrap">
+                                {isBestSeller && (
+                                    <span className="emag-badge badge-best-seller">Best seller</span>
+                                )}
+                                {isTopRated && (
+                                    <span className="emag-badge badge-top-rated">Top rated</span>
+                                )}
+                            </div>
                             <button
                                 type="button"
                                 className={`emag-fav-btn ${favorited ? "active" : ""}`}

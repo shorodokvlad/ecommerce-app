@@ -40,6 +40,12 @@ public class CacheConfig implements CachingConfigurer {
                 redisCacheConfiguration.entryTtl(Duration.ofHours(1)));
     }
 
+    @Bean
+    public RedisCacheManagerBuilderCustomizer topProductsCacheCustomizer(RedisCacheConfiguration redisCacheConfiguration) {
+        return builder -> builder.withCacheConfiguration("topProducts",
+                redisCacheConfiguration.entryTtl(Duration.ofMinutes(10)));
+    }
+
     @Override
     public CacheErrorHandler errorHandler() {
         return new CacheErrorHandler() {
