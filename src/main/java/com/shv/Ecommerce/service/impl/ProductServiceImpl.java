@@ -7,9 +7,11 @@ import com.shv.Ecommerce.entity.Product;
 import com.shv.Ecommerce.entity.Review;
 import com.shv.Ecommerce.entity.Warehouse;
 import com.shv.Ecommerce.entity.WarehouseStock;
+import com.shv.Ecommerce.enums.OrderStatus;
 import com.shv.Ecommerce.exception.NotFoundException;
 import com.shv.Ecommerce.mapper.EntityDtoMapper;
 import com.shv.Ecommerce.repository.CategoryRepo;
+import com.shv.Ecommerce.repository.OrderItemRepo;
 import com.shv.Ecommerce.repository.ProductRepo;
 import com.shv.Ecommerce.repository.ReviewRepo;
 import com.shv.Ecommerce.repository.WarehouseRepo;
@@ -29,23 +31,38 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class ProductServiceImpl implements IProductService {
+    private static final BigDecimal HOME_TOP_RATED_THRESHOLD = new BigDecimal("4.8");
+    private static final int HOME_FEED_DEFAULT_LIMIT = 24;
+    private static final Set<OrderStatus> SOLD_EXCLUDED_STATUSES =
+            Set.of(OrderStatus.CANCELLED, OrderStatus.RETURNED);
+
     private final ProductRepo productRepo;
     private final CategoryRepo categoryRepo;
     private final EntityDtoMapper entityDtoMapper;
     private final AwsS3Service awsS3Service;
     private final ReviewRepo reviewRepo;
     private final WarehouseRepo warehouseRepo;
+    private final OrderItemRepo orderItemRepo;
 
     private ProductDto mapProductToDtoWithReviewStats(Product product) {
+        return mapProductToDtoWithReviewStats(product, null);
+    }
+
+    private ProductDto mapProductToDtoWithReviewStats(Product product, Set<Long> topSellerProductIds) {
         ProductDto productDto = entityDtoMapper.mapProductToDtoBasic(product);
 
         List<Review> reviews = reviewRepo.findByProductId(product.getId());
@@ -57,30 +74,38 @@ public class ProductServiceImpl implements IProductService {
                     .mapToInt(Review::getRating)
                     .average()
                     .orElse(0);
-            productDto.setAverageRating(BigDecimal.valueOf(average).setScale(1, RoundingMode.HALF_UP));
+            BigDecimal avgBd = BigDecimal.valueOf(average).setScale(1, RoundingMode.HALF_UP);
+            productDto.setAverageRating(avgBd);
+            if (avgBd.compareTo(HOME_TOP_RATED_THRESHOLD) >= 0) {
+                productDto.setIsTopRated(true);
+            }
+        }
+
+        if (topSellerProductIds != null && topSellerProductIds.contains(product.getId())) {
+            productDto.setIsBestSeller(true);
         }
 
         return productDto;
     }
     @Override
-    @CacheEvict(cacheNames = "products", allEntries = true)
+    @CacheEvict(cacheNames = {"products", "topProducts"}, allEntries = true)
     public Response createProduct(Long categoryId, MultipartFile image, String name, String description, BigDecimal price, Integer stockQuantity) {
         return createProduct(categoryId, image, null, name, description, price, stockQuantity);
     }
 
     @Override
-    @CacheEvict(cacheNames = "products", allEntries = true)
+    @CacheEvict(cacheNames = {"products", "topProducts"}, allEntries = true)
     public Response createProduct(Long categoryId, MultipartFile image, List<MultipartFile> images, String name, String description, BigDecimal price, Integer stockQuantity) {
         return createProduct(categoryId, image, images, name, description, price, stockQuantity, null, null);
     }
 
-    @CacheEvict(cacheNames = "products", allEntries = true)
+    @CacheEvict(cacheNames = {"products", "topProducts"}, allEntries = true)
     public Response createProduct(Long categoryId, MultipartFile image, List<MultipartFile> images, String name, String description, BigDecimal price, Integer stockQuantity, String variantsJson) {
         return createProduct(categoryId, image, images, name, description, price, stockQuantity, variantsJson, null);
     }
 
     @Override
-    @CacheEvict(cacheNames = "products", allEntries = true)
+    @CacheEvict(cacheNames = {"products", "topProducts"}, allEntries = true)
     public Response createProduct(Long categoryId, MultipartFile image, List<MultipartFile> images, String name, String description, BigDecimal price, Integer stockQuantity, String variantsJson, Map<Integer, List<MultipartFile>> variantImagesMap) {
         Category category = categoryRepo.findById(categoryId).orElseThrow(() -> new NotFoundException("Category not found"));
 
@@ -114,24 +139,24 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    @CacheEvict(cacheNames = "products", allEntries = true)
+    @CacheEvict(cacheNames = {"products", "topProducts"}, allEntries = true)
     public Response updateProduct(Long productId, Long categoryId, MultipartFile image, String name, String description, BigDecimal price, Integer stockQuantity) {
         return updateProduct(productId, categoryId, image, null, name, description, price, stockQuantity, null, null, null);
     }
 
     @Override
-    @CacheEvict(cacheNames = "products", allEntries = true)
+    @CacheEvict(cacheNames = {"products", "topProducts"}, allEntries = true)
     public Response updateProduct(Long productId, Long categoryId, MultipartFile image, List<MultipartFile> images, String name, String description, BigDecimal price, Integer stockQuantity, List<String> existingImageUrls) {
         return updateProduct(productId, categoryId, image, images, name, description, price, stockQuantity, existingImageUrls, null, null);
     }
 
-    @CacheEvict(cacheNames = "products", allEntries = true)
+    @CacheEvict(cacheNames = {"products", "topProducts"}, allEntries = true)
     public Response updateProduct(Long productId, Long categoryId, MultipartFile image, List<MultipartFile> images, String name, String description, BigDecimal price, Integer stockQuantity, List<String> existingImageUrls, String variantsJson) {
         return updateProduct(productId, categoryId, image, images, name, description, price, stockQuantity, existingImageUrls, variantsJson, null);
     }
 
     @Override
-    @CacheEvict(cacheNames = "products", allEntries = true)
+    @CacheEvict(cacheNames = {"products", "topProducts"}, allEntries = true)
     public Response updateProduct(Long productId, Long categoryId, MultipartFile image, List<MultipartFile> images, String name, String description, BigDecimal price, Integer stockQuantity, List<String> existingImageUrls, String variantsJson, Map<Integer, List<MultipartFile>> variantImagesMap) {
         Product product = productRepo.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
 
@@ -261,7 +286,7 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    @CacheEvict(cacheNames = "products", allEntries = true)
+    @CacheEvict(cacheNames = {"products", "topProducts"}, allEntries = true)
     public Response deleteProduct(Long productId) {
         Product product = productRepo.findById(productId).orElseThrow(()->new RuntimeException("Product not found"));
         productRepo.delete(product);
@@ -425,5 +450,153 @@ public class ProductServiceImpl implements IProductService {
                 .totalElement(productDtoList.size())
                 .productList(productDtoList)
                 .build();
+    }
+
+    @Override
+    @Cacheable(cacheNames = "products", key = "'home-feed-v3'")
+    public Response getHomeFeedProducts(Integer limit) {
+        int size = (limit == null || limit <= 0) ? HOME_FEED_DEFAULT_LIMIT : limit;
+
+        List<Product> allProducts = productRepo.findAll();
+        if (allProducts.isEmpty()) {
+            return Response.builder()
+                    .status(200)
+                    .message("No products found")
+                    .totalElement(0)
+                    .productList(java.util.Collections.emptyList())
+                    .build();
+        }
+
+        // Average rating + review count per product (single aggregation query)
+        Map<Long, BigDecimal> avgRatingByProduct = new HashMap<>();
+        Map<Long, Integer> reviewCountByProduct = new HashMap<>();
+        for (Object[] row : reviewRepo.findAverageRatingByProduct()) {
+            Long productId = row[0] != null ? ((Number) row[0]).longValue() : null;
+            double average = row[1] != null ? ((Number) row[1]).doubleValue() : 0;
+            int count = row[2] != null ? ((Number) row[2]).intValue() : 0;
+            if (productId != null) {
+                avgRatingByProduct.put(productId, BigDecimal.valueOf(average).setScale(1, RoundingMode.HALF_UP));
+                reviewCountByProduct.put(productId, count);
+            }
+        }
+
+        // Total units sold per product (excluding cancelled/returned orders)
+        Map<Long, Long> totalSoldByProduct = new HashMap<>();
+        for (Object[] row : orderItemRepo.findTotalSoldByProduct(SOLD_EXCLUDED_STATUSES)) {
+            Long productId = row[0] != null ? ((Number) row[0]).longValue() : null;
+            long sold = row[1] != null ? ((Number) row[1]).longValue() : 0L;
+            if (productId != null) {
+                totalSoldByProduct.put(productId, sold);
+            }
+        }
+
+        // Best seller per category (products without a category are their own group)
+        Map<Object, Long> bestSoldPerGroup = new HashMap<>();
+        for (Product p : allProducts) {
+            Object groupKey = p.getCategory() != null ? p.getCategory().getId() : "p" + p.getId();
+            long sold = totalSoldByProduct.getOrDefault(p.getId(), 0L);
+            if (sold > bestSoldPerGroup.getOrDefault(groupKey, 0L)) {
+                bestSoldPerGroup.put(groupKey, sold);
+            }
+        }
+
+        Set<Long> topSellerProductIds = new HashSet<>();
+        for (Product p : allProducts) {
+            Object groupKey = p.getCategory() != null ? p.getCategory().getId() : "p" + p.getId();
+            long sold = totalSoldByProduct.getOrDefault(p.getId(), 0L);
+            if (sold > 0 && sold == bestSoldPerGroup.getOrDefault(groupKey, 0L)) {
+                topSellerProductIds.add(p.getId());
+            }
+        }
+
+        // Ensure best seller representation per category (using sales, or top-rated per category if sales count is small)
+        if (topSellerProductIds.size() < Math.min(4, allProducts.size()) && !allProducts.isEmpty()) {
+            Map<Object, Product> topProductPerGroup = new LinkedHashMap<>();
+            for (Product p : allProducts) {
+                Object groupKey = p.getCategory() != null ? p.getCategory().getId() : "p" + p.getId();
+                Product current = topProductPerGroup.get(groupKey);
+                if (current == null) {
+                    topProductPerGroup.put(groupKey, p);
+                } else {
+                    BigDecimal currentRating = avgRatingByProduct.getOrDefault(current.getId(), BigDecimal.ZERO);
+                    BigDecimal pRating = avgRatingByProduct.getOrDefault(p.getId(), BigDecimal.ZERO);
+                    if (pRating.compareTo(currentRating) > 0) {
+                        topProductPerGroup.put(groupKey, p);
+                    }
+                }
+            }
+            for (Product p : topProductPerGroup.values()) {
+                topSellerProductIds.add(p.getId());
+            }
+        }
+
+        // Priority set = top rated (avg >= 4.8) OR top selling; the rest are fillers
+        List<Product> priority = new ArrayList<>();
+        List<Product> fillers = new ArrayList<>();
+        for (Product p : allProducts) {
+            BigDecimal rating = avgRatingByProduct.getOrDefault(p.getId(), BigDecimal.ZERO);
+            boolean topRated = rating.compareTo(HOME_TOP_RATED_THRESHOLD) >= 0;
+            boolean topSeller = topSellerProductIds.contains(p.getId());
+            if (topRated || topSeller) {
+                priority.add(p);
+            } else {
+                fillers.add(p);
+            }
+        }
+
+        // Remaining slots are filled with the highest-rated products first
+        fillers.sort(Comparator
+                .comparing((Product p) -> avgRatingByProduct.getOrDefault(p.getId(), BigDecimal.ZERO)).reversed()
+                .thenComparing(Comparator.comparingInt(
+                        (Product p) -> reviewCountByProduct.getOrDefault(p.getId(), 0)).reversed())
+                .thenComparing(Product::getName, String.CASE_INSENSITIVE_ORDER));
+
+        // Shuffle the priority pool (top rated + top selling) so these product types
+        // are randomly mixed together — never grouped by type — and so the cut to
+        // `size` picks a random subset when there are more than `size` of them.
+        Collections.shuffle(priority);
+
+        List<Product> selected = new ArrayList<>(priority);
+        if (selected.size() > size) {
+            selected = new ArrayList<>(selected.subList(0, size));
+        } else if (selected.size() < size) {
+            // Any remaining slots are appended AFTER the priority products,
+            // taking the highest-rated products first.
+            selected.addAll(fillers.subList(0, Math.min(size - selected.size(), fillers.size())));
+        }
+
+        List<ProductDto> productDtoList = selected.stream()
+                .map(p -> mapProductToDtoWithPrecomputedStats(p, avgRatingByProduct, reviewCountByProduct, topSellerProductIds))
+                .toList();
+
+        return Response.builder()
+                .status(200)
+                .totalElement(productDtoList.size())
+                .productList(productDtoList)
+                .build();
+    }
+
+    private ProductDto mapProductToDtoWithPrecomputedStats(Product product,
+                                                           Map<Long, BigDecimal> avgRatingByProduct,
+                                                           Map<Long, Integer> reviewCountByProduct,
+                                                           Set<Long> topSellerProductIds) {
+        ProductDto productDto = entityDtoMapper.mapProductToDtoBasic(product);
+
+        BigDecimal rating = avgRatingByProduct.get(product.getId());
+        if (rating != null) {
+            productDto.setAverageRating(rating);
+            productDto.setReviewCount(reviewCountByProduct.getOrDefault(product.getId(), 0));
+            if (rating.compareTo(HOME_TOP_RATED_THRESHOLD) >= 0) {
+                productDto.setIsTopRated(true);
+            }
+        } else {
+            productDto.setReviewCount(0);
+        }
+
+        if (topSellerProductIds != null && topSellerProductIds.contains(product.getId())) {
+            productDto.setIsBestSeller(true);
+        }
+
+        return productDto;
     }
 }

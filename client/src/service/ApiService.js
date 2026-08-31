@@ -134,6 +134,14 @@ export default class ApiService {
         return response.data;
     }
 
+    /** Curated home feed — up to 24 products (top rated + top sellers + highest rated, shuffled), no pagination */
+    static async getHomeFeedProducts(limit) {
+        const params = {};
+        if (limit !== undefined && limit !== null) params.limit = limit;
+        const response = await axios.get(`${this.BASE_URL}/product/home-feed`, { params });
+        return response.data;
+    }
+
     static async searchProducts(searchValue, page, size) {
         const params = { searchValue };
         if (page !== undefined && page !== null) params.page = page;
@@ -268,6 +276,14 @@ export default class ApiService {
         const response = await axios.get(`${this.BASE_URL}/dashboard/stats`, {
             headers: this.getHeader(),
             params
+        });
+        return response.data;
+    }
+
+    /** TOP RATED + TOP SELLING PRODUCTS */
+    static async getDashboardTopProducts() {
+        const response = await axios.get(`${this.BASE_URL}/dashboard/top-products`, {
+            headers: this.getHeader()
         });
         return response.data;
     }

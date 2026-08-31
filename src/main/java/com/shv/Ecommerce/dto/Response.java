@@ -54,4 +54,5 @@ public class Response {
     private List<WarehouseDto> warehouseList;
 
     private DashboardStatsDto dashboardStats;
+    private TopProductsDto topProducts;
 }

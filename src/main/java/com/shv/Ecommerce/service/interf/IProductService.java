@@ -26,4 +26,11 @@ public interface IProductService {
 
     Response searchProduct(String searchValue);
     Response searchProduct(String searchValue, Integer page, Integer size);
+
+    /**
+     * Curated home feed without pagination — up to {@code limit} products (default 24).
+     * Top rated & top selling products come first, randomly mixed together (never
+     * grouped by type); any remaining slots are filled with the highest-rated products.
+     */
+    Response getHomeFeedProducts(Integer limit);
 }

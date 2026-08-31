@@ -1,6 +1,7 @@
 package com.shv.Ecommerce.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,4 +24,10 @@ public class ProductDto {
     private java.util.List<ProductVariantDto> variants;
     private BigDecimal averageRating;
     private Integer reviewCount;
+
+    @JsonProperty("isTopRated")
+    private Boolean isTopRated;
+
+    @JsonProperty("isBestSeller")
+    private Boolean isBestSeller;
 }

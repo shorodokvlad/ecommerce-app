@@ -8,6 +8,8 @@ import ProductSkeleton from "../common/ProductSkeleton";
 import '../../style/home.css';
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache validity
+const HOME_FEED_LIMIT = 24; // max products shown on the home feed (no pagination)
+const SEARCH_PAGE_SIZE = 18;
 
 const Home = () => {
     const location = useLocation();
@@ -16,7 +18,6 @@ const Home = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
-    const itemsPerPage = 18;
 
     const searchItem = new URLSearchParams(location.search).get('search');
 
@@ -28,55 +29,41 @@ const Home = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             const pageIndex = currentPage - 1;
-            const cacheKey = `shv_home_products_p${currentPage}`;
-            const cacheTimeKey = `shv_home_products_time_p${currentPage}`;
 
-            // Check sessionStorage cache for non-search pages
+            // The home feed is a single curated list (no pagination) — cached in
+            // sessionStorage so revisits render instantly instead of re-shuffling.
             if (!searchItem) {
-                const cachedData = sessionStorage.getItem(cacheKey);
-                const cachedTime = sessionStorage.getItem(cacheTimeKey);
-                const now = Date.now();
-
-                if (cachedData && cachedTime && (now - parseInt(cachedTime, 10)) < CACHE_TTL) {
+                const cachedData = sessionStorage.getItem('shv_home_feed_v3');
+                const cachedTime = sessionStorage.getItem('shv_home_feed_v3_time');
+                if (cachedData && cachedTime && (Date.now() - parseInt(cachedTime, 10)) < CACHE_TTL) {
                     try {
-                        const parsed = JSON.parse(cachedData);
-                        setProducts(parsed.productList || []);
-                        setTotalPages(parsed.totalPage || 1);
+                        setProducts(JSON.parse(cachedData).productList || []);
                         setLoading(false);
+                        return;
                     } catch (e) {
-                        // Ignore cache parse errors
+                        // Ignore cache parse errors and fall through to a fresh fetch
                     }
-                } else {
-                    setLoading(true);
                 }
-            } else {
-                setLoading(true);
             }
+
+            setLoading(true);
 
             try {
                 setError(null);
-                let response;
+                const response = searchItem
+                    ? await ApiService.searchProducts(searchItem, pageIndex, SEARCH_PAGE_SIZE)
+                    : await ApiService.getHomeFeedProducts(HOME_FEED_LIMIT);
 
-                if (searchItem) {
-                    response = await ApiService.searchProducts(searchItem, pageIndex, itemsPerPage);
-                } else {
-                    response = await ApiService.getAllProducts(pageIndex, itemsPerPage);
-                }
+                setProducts(response.productList || []);
+                setTotalPages(response.totalPage || 1);
 
-                const fetchedProducts = response.productList || [];
-                const fetchedPages = response.totalPage || 1;
-
-                setProducts(fetchedProducts);
-                setTotalPages(fetchedPages);
-
-                // Save to sessionStorage cache for non-search calls
                 if (!searchItem) {
-                    sessionStorage.setItem(cacheKey, JSON.stringify(response));
-                    sessionStorage.setItem(cacheTimeKey, Date.now().toString());
+                    sessionStorage.setItem('shv_home_feed_v3', JSON.stringify(response));
+                    sessionStorage.setItem('shv_home_feed_v3_time', Date.now().toString());
                 }
             } catch (err) {
-                // If we already loaded cached data, don't display blocking error
-                if (!sessionStorage.getItem(cacheKey)) {
+                // If we already loaded cached feed data, don't display blocking error
+                if (searchItem || !sessionStorage.getItem('shv_home_feed_v3')) {
                     setError(err.response?.data?.message || err.message || 'Unable to fetch products');
                 }
             } finally {
@@ -104,7 +91,7 @@ const Home = () => {
             {loading && products.length === 0 ? (
                 <section className="best-sellers-section">
                     {!searchItem && <h2 className="section-title emag-section-title">Products chosen for you</h2>}
-                    <ProductSkeleton count={18} />
+                    <ProductSkeleton count={searchItem ? SEARCH_PAGE_SIZE : HOME_FEED_LIMIT} />
                 </section>
             ) : products.length === 0 ? (
                 <div className="search-empty-state">
@@ -115,11 +102,14 @@ const Home = () => {
                 <section className="best-sellers-section">
                     {!searchItem && <h2 className="section-title emag-section-title">Products chosen for you</h2>}
                     <ProductList products={products} />
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={(page) => setCurrentPage(page)}
-                    />
+                    {/* Pagination only for search results — the home feed is a single curated list */}
+                    {searchItem && totalPages > 1 && (
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={(page) => setCurrentPage(page)}
+                        />
+                    )}
                 </section>
             )}
         </div>

@@ -39,6 +39,7 @@ public class Product {
     private Category category;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OrderBy("id ASC")
     private java.util.List<ProductVariant> variants = new java.util.ArrayList<>();
 
     @Column(name = "created_at")

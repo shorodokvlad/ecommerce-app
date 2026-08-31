@@ -65,9 +65,14 @@ const DeliveryEstimate = ({ defaultSubtotal = 0 }) => {
     const [selectedCounty, setSelectedCounty] = useState("");
     const [selectedLocality, setSelectedLocality] = useState("");
     const [estimate, setEstimate] = useState(null);
+    const fetchedKeyRef = useRef("");
 
     const loadEstimate = useCallback(
         async (params) => {
+            const key = `${params.country || 'RO'}:${params.county || ''}:${params.locality || ''}:${subtotalRef.current}`;
+            if (fetchedKeyRef.current === key) return estimate;
+            fetchedKeyRef.current = key;
+
             try {
                 const response = await ApiService.getDeliveryEstimate({ ...params, subtotal: subtotalRef.current });
                 const est = response.deliveryEstimate;
@@ -82,7 +87,7 @@ const DeliveryEstimate = ({ defaultSubtotal = 0 }) => {
                 return null;
             }
         },
-        []
+        [estimate]
     );
 
     // Initial resolution: fetch fresh user account address if logged in
@@ -123,23 +128,19 @@ const DeliveryEstimate = ({ defaultSubtotal = 0 }) => {
         return () => { active = false; };
     }, [loadEstimate, initialLocation]);
 
-    // Keep estimate in sync when subtotal changes (e.g. variant switch)
-    const prevSubtotalRef = useRef(subtotal);
+    // Keep estimate in sync when subtotal or location changes
     useEffect(() => {
-        if (prevSubtotalRef.current === subtotal) return;
-        prevSubtotalRef.current = subtotal;
-        if (mode === "done") {
-            const loc = estimate?.locality || activeLocation?.locality;
-            const county = estimate?.county || activeLocation?.county;
-            const country = estimate?.country || "RO";
-            if (loc) {
-                const params = county
-                    ? { country, county, locality: loc, source: "account" }
-                    : { country, locality: loc, source: "account" };
-                loadEstimate(params);
-            }
+        const loc = estimate?.locality || activeLocation?.locality || initialLocation?.locality;
+        const county = estimate?.county || activeLocation?.county || initialLocation?.county;
+        const country = "RO";
+        if (loc) {
+            const params = county
+                ? { country, county, locality: loc, source: activeLocation?.source || "account" }
+                : { country, locality: loc, source: activeLocation?.source || "account" };
+            loadEstimate(params);
         }
-    }, [subtotal, mode, estimate, activeLocation, loadEstimate]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [subtotal, activeLocation, initialLocation, loadEstimate]);
 
     useEffect(() => {
         if (mode === "manual" && counties.length === 0) {

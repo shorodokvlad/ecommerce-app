@@ -2,6 +2,7 @@ package com.shv.Ecommerce.controller;
 
 import com.shv.Ecommerce.dto.DashboardStatsDto;
 import com.shv.Ecommerce.dto.Response;
+import com.shv.Ecommerce.dto.TopProductsDto;
 import com.shv.Ecommerce.service.interf.IDashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -33,6 +34,17 @@ public class DashboardController {
                 .status(200)
                 .message("Dashboard statistics fetched successfully")
                 .dashboardStats(stats)
+                .build());
+    }
+
+    @GetMapping("/top-products")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'ADMIN_RESTRICTED')")
+    public ResponseEntity<Response> getTopProducts() {
+        TopProductsDto topProducts = dashboardService.getTopProducts();
+        return ResponseEntity.ok(Response.builder()
+                .status(200)
+                .message("Top rated and top selling products fetched successfully")
+                .topProducts(topProducts)
                 .build());
     }
 }

@@ -74,7 +74,8 @@ const EditProductPage = () => {
             }
 
             if (prod.variants && prod.variants.length > 0) {
-                setVariants(prod.variants.map((v, idx) => {
+                const sortedVariants = [...prod.variants].sort((a, b) => (a.id || 0) - (b.id || 0));
+                setVariants(sortedVariants.map((v, idx) => {
                     const attrsList = [];
                     if (v.attributes) {
                         Object.entries(v.attributes).forEach(([k, val]) => {
